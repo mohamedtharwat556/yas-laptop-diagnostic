@@ -34,9 +34,9 @@ const Client = {
             }
             
             // معالجة إرسال النموذج
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 if (this.validateForm(form)) {
                     const formData = new FormData(form);
                     const sessionData = {
@@ -45,10 +45,10 @@ const Client = {
                         serviceOrder: formData.get('serviceOrder'),
                         problemDescription: formData.get('problemDescription')
                     };
-                    
-                    // إضافة جلسة جديدة
-                    AppState.addSession(sessionData);
-                    
+
+                    // إضافة جلسة جديدة (async for Supabase)
+                    await AppState.addSession(sessionData);
+
                     // الانتقال إلى صفحة الفحص
                     window.location.href = 'diagnostic.html';
                 }
