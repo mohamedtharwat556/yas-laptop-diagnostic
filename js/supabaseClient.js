@@ -3,8 +3,8 @@
 
 // Configuration
 const SUPABASE_CONFIG = {
-    url: window.SUPABASE_URL || import.meta.env?.VITE_SUPABASE_URL || '',
-    anonKey: window.SUPABASE_ANON_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY || ''
+    url: window.SUPABASE_URL || '',
+    anonKey: window.SUPABASE_ANON_KEY || ''
 };
 
 // Supabase client (will be initialized when script loads)
