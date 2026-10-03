@@ -1076,29 +1076,45 @@ const DiagnosticEngine = {
                 </div>
                 <div class="test-overlay-content" id="speakerTestContent">
                     <div class="speaker-test-container">
-                        <button class="btn btn-primary btn-lg" id="playSpeakerBtn">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            تشغيل الصوت
-                        </button>
+                        <div class="speaker-test-buttons">
+                            <button class="btn btn-primary btn-lg" id="playLeftBtn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                اختبار السماعة اليسرى
+                            </button>
+                            <button class="btn btn-primary btn-lg" id="playRightBtn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                اختبار السماعة اليمنى
+                            </button>
+                        </div>
                         <div class="speaker-status" id="speakerStatus"></div>
+                        <div class="speaker-results" id="speakerResults"></div>
                     </div>
                 </div>
                 <div class="test-overlay-actions speaker-overlay-actions" id="speakerActions" style="display: none;">
-                    <p class="speaker-question">هل سمعت الصوت بوضوح؟</p>
+                    <p class="speaker-question">هل سمعت الصوت من السماعتين؟</p>
                     <button class="btn btn-success btn-lg" id="speakerYesBtn">نعم، سمعت الصوت</button>
                     <button class="btn btn-danger btn-lg" id="speakerNoBtn">لا، لم أسمع الصوت</button>
                 </div>
             `;
             document.body.appendChild(overlay);
 
-            const playBtn = document.getElementById('playSpeakerBtn');
+            const playLeftBtn = document.getElementById('playLeftBtn');
+            const playRightBtn = document.getElementById('playRightBtn');
             const statusEl = document.getElementById('speakerStatus');
+            const resultsEl = document.getElementById('speakerResults');
             const actionsEl = document.getElementById('speakerActions');
             const yesBtn = document.getElementById('speakerYesBtn');
             const noBtn = document.getElementById('speakerNoBtn');
             const closeBtn = document.getElementById('closeSpeakerBtn');
+
+            let audioContext = null;
+            let oscillator = null;
+            let leftTested = false;
+            let rightTested = false;
 
             // زر الإغلاق
             closeBtn.addEventListener('click', () => {
@@ -1120,16 +1136,23 @@ const DiagnosticEngine = {
                 });
             });
 
-            let audioContext = null;
-            let oscillator = null;
-
-            playBtn.addEventListener('click', () => {
+            // اختبار السماعة اليسرى
+            playLeftBtn.addEventListener('click', () => {
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
 
-                    oscillator.connect(gainNode);
+                    if (audioContext.createStereoPanner) {
+                        const panner = audioContext.createStereoPanner();
+                        oscillator.connect(panner);
+                        panner.connect(gainNode);
+                        panner.pan.setValueAtTime(-1, audioContext.currentTime); // Left channel only
+                    } else {
+                        // Fallback for browsers without StereoPanner
+                        oscillator.connect(gainNode);
+                    }
+
                     gainNode.connect(audioContext.destination);
 
                     oscillator.type = 'sine';
@@ -1137,7 +1160,7 @@ const DiagnosticEngine = {
                     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
 
                     oscillator.start();
-                    statusEl.textContent = 'جاري تشغيل اختبار الصوت...';
+                    statusEl.textContent = 'جاري تشغيل الصوت من السماعة اليسرى...';
                     statusEl.classList.add('status-success');
 
                     // تشغيل لمدة 2 ثانية
@@ -1150,16 +1173,78 @@ const DiagnosticEngine = {
                             audioContext.close();
                             audioContext = null;
                         }
-                        statusEl.textContent = 'اكتمل تشغيل الصوت';
-                        playBtn.style.display = 'none';
-                        actionsEl.style.display = 'flex';
+                        leftTested = true;
+                        statusEl.textContent = 'اكتمل اختبار السماعة اليسرى';
+                        if (!resultsEl.innerHTML) {
+                            resultsEl.innerHTML = '<div class="speaker-result-item">✓ السماعة اليسرى تم الاختبار</div>';
+                        } else {
+                            resultsEl.innerHTML += '<div class="speaker-result-item">✓ السماعة اليسرى تم الاختبار</div>';
+                        }
+
+                        if (leftTested && rightTested) {
+                            actionsEl.style.display = 'flex';
+                        }
                     }, 2000);
                 } catch (error) {
                     console.log('Speaker test failed:', error);
                     statusEl.textContent = 'تعذر تشغيل الصوت. المتصفح لا يدعم Web Audio API.';
                     statusEl.classList.add('status-error');
-                    playBtn.style.display = 'none';
-                    actionsEl.style.display = 'flex';
+                }
+            });
+
+            // اختبار السماعة اليمنى
+            playRightBtn.addEventListener('click', () => {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    if (audioContext.createStereoPanner) {
+                        const panner = audioContext.createStereoPanner();
+                        oscillator.connect(panner);
+                        panner.connect(gainNode);
+                        panner.pan.setValueAtTime(1, audioContext.currentTime); // Right channel only
+                    } else {
+                        // Fallback for browsers without StereoPanner
+                        oscillator.connect(gainNode);
+                    }
+
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+
+                    oscillator.start();
+                    statusEl.textContent = 'جاري تشغيل الصوت من السماعة اليمنى...';
+                    statusEl.classList.add('status-success');
+
+                    // تشغيل لمدة 2 ثانية
+                    setTimeout(() => {
+                        if (oscillator) {
+                            oscillator.stop();
+                            oscillator = null;
+                        }
+                        if (audioContext) {
+                            audioContext.close();
+                            audioContext = null;
+                        }
+                        rightTested = true;
+                        statusEl.textContent = 'اكتمل اختبار السماعة اليمنى';
+                        if (!resultsEl.innerHTML) {
+                            resultsEl.innerHTML = '<div class="speaker-result-item">✓ السماعة اليمنى تم الاختبار</div>';
+                        } else {
+                            resultsEl.innerHTML += '<div class="speaker-result-item">✓ السماعة اليمنى تم الاختبار</div>';
+                        }
+
+                        if (leftTested && rightTested) {
+                            actionsEl.style.display = 'flex';
+                        }
+                    }, 2000);
+                } catch (error) {
+                    console.log('Speaker test failed:', error);
+                    statusEl.textContent = 'تعذر تشغيل الصوت. المتصفح لا يدعم Web Audio API.';
+                    statusEl.classList.add('status-error');
                 }
             });
 
@@ -1178,7 +1263,7 @@ const DiagnosticEngine = {
                 container.style.display = 'block';
                 resolve({
                     status: 'passed',
-                    details: 'تم تشغيل اختبار الصوت وتأكيده بواسطة المستخدم'
+                    details: `تم تشغيل اختبار الصوت من السماعتين. السماعة اليسرى: ${leftTested ? 'سمعت' : 'لم تسمع'}, السماعة اليمنى: ${rightTested ? 'سمعت' : 'لم تسمع'}`
                 });
             });
 
@@ -1197,7 +1282,7 @@ const DiagnosticEngine = {
                 container.style.display = 'block';
                 resolve({
                     status: 'warning',
-                    details: 'تم تشغيل اختبار الصوت لكن المستخدم لم يسمعه بوضوح'
+                    details: `تم تشغيل اختبار الصوت من السماعتين. السماعة اليسرى: ${leftTested ? 'سمعت' : 'لم تسمع'}, السماعة اليمنى: ${rightTested ? 'سمعت' : 'لم تسمع'}`
                 });
             });
 

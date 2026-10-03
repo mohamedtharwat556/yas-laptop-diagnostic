@@ -1114,6 +1114,25 @@
     margin-bottom: var(--spacing-4);
 }
 
+.speaker-test-buttons {
+    display: flex;
+    gap: var(--spacing-4);
+    justify-content: center;
+    margin-bottom: var(--spacing-6);
+}
+
+.speaker-results {
+    margin-top: var(--spacing-4);
+    text-align: center;
+}
+
+.speaker-result-item {
+    font-size: var(--font-size-base);
+    color: var(--color-success);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-2) 0;
+}
+
 /* Responsive Client */
 @media (max-width: 768px) {
     .client-main {
