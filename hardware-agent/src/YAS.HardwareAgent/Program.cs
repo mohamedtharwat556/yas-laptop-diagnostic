@@ -6,6 +6,9 @@ using Microsoft.Extensions.Logging;
 using YAS.HardwareAgent.Services;
 using YAS.HardwareAgent.Infrastructure;
 
+// Make Program class accessible for testing
+public partial class Program { }
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add configuration
