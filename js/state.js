@@ -55,9 +55,20 @@ const AppState = {
     },
     
     // إضافة جلسة فحص جديدة
-    addSession: function(sessionData) {
+    addSession: async function(sessionData) {
+        // Try to create session in Supabase via sessionService
+        let supabaseSession = null;
+        if (window.sessionService) {
+            try {
+                supabaseSession = await window.sessionService.createSession(sessionData);
+            } catch (error) {
+                console.error('Supabase session creation failed, using local fallback:', error);
+            }
+        }
+
         const session = {
-            sessionId: Date.now().toString(),
+            sessionId: supabaseSession?.id || Date.now().toString(),
+            sessionCode: supabaseSession?.sessionCode || null,
             customer: {
                 name: sessionData.customerName,
                 phone: sessionData.customerPhone,
@@ -76,7 +87,8 @@ const AppState = {
             status: 'active',
             startedAt: new Date().toISOString(),
             completedAt: null,
-            technicianNotes: []
+            technicianNotes: [],
+            supabaseId: supabaseSession?.id || null
         };
 
         this.recentSessions.unshift(session);
@@ -103,7 +115,7 @@ const AppState = {
     },
     
     // حفظ نتيجة اختبار - Normalized Model
-    saveTestResult: function(testId, result) {
+    saveTestResult: async function(testId, result) {
         if (this.currentSession) {
             const startTime = Date.now();
 
@@ -138,6 +150,15 @@ const AppState = {
             this.updateSummary(normalizedResult);
 
             this.saveToLocalStorage();
+
+            // Sync to Supabase if available
+            if (window.sessionService && this.currentSession.sessionCode) {
+                try {
+                    await window.sessionService.saveTestResult(this.currentSession.sessionCode, testId, normalizedResult);
+                } catch (error) {
+                    console.error('Failed to sync test result to Supabase:', error);
+                }
+            }
         }
     },
     
@@ -211,10 +232,19 @@ const AppState = {
     },
     
     // حفظ معلومات الجهاز
-    saveDeviceInfo: function(deviceInfo) {
+    saveDeviceInfo: async function(deviceInfo) {
         if (this.currentSession) {
             this.currentSession.deviceInfo = deviceInfo;
             this.saveToLocalStorage();
+
+            // Sync to Supabase if available
+            if (window.sessionService && this.currentSession.sessionCode) {
+                try {
+                    await window.sessionService.saveDeviceInfo(this.currentSession.sessionCode, deviceInfo);
+                } catch (error) {
+                    console.error('Failed to sync device info to Supabase:', error);
+                }
+            }
         }
     },
     
