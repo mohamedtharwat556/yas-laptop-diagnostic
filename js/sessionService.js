@@ -7,13 +7,19 @@ class SessionService {
         this.localSessions = new Map();
         this.pendingSync = new Map();
         this.isOnline = navigator.onLine;
-        this.init();
+        this.initialized = false;
+        this.initPromise = this.init();
     }
 
     /**
      * Initialize session service
      */
-    init() {
+    async init() {
+        // Wait for Supabase config to be loaded
+        if (window.waitForConfig) {
+            await window.waitForConfig(3000);
+        }
+
         // Initialize Supabase if available
         if (window.getSupabase) {
             this.supabase = window.getSupabase();
@@ -26,10 +32,19 @@ class SessionService {
         window.addEventListener('online', () => this.handleOnline());
         window.addEventListener('offline', () => this.handleOffline());
 
+        this.initialized = true;
+
         console.log('SessionService initialized', {
             supabaseAvailable: this.supabase !== null,
             isOnline: this.isOnline
         });
+    }
+
+    /**
+     * Wait for session service to be initialized
+     */
+    async waitForInitialization() {
+        await this.initPromise;
     }
 
     /**
@@ -92,6 +107,10 @@ class SessionService {
      */
     async createSession(customerData) {
         console.log('SessionService.createSession called with:', customerData);
+
+        // Wait for initialization
+        await this.waitForInitialization();
+
         const sessionCode = this.generateSessionCode();
         console.log('Generated session code:', sessionCode);
         const session = {
