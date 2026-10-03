@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 using System.Net;
 using System.Text.Json;
@@ -89,5 +91,16 @@ public class HardwareEndpointTests : IClassFixture<WebApplicationFactory<Program
         // Check that storage is empty array, not fake capacity
         var storage = json.RootElement.GetProperty("storage");
         Assert.Equal(JsonValueKind.Array, storage.ValueKind);
+    }
+}
+
+/// <summary>
+/// Program class for test hosting
+/// </summary>
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        // Entry point for testing
     }
 }

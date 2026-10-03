@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 using System.Net;
 using System.Text.Json;
@@ -51,5 +53,16 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal("ok", status.GetString());
         Assert.NotNull(agent.GetString());
         Assert.NotNull(version.GetString());
+    }
+}
+
+/// <summary>
+/// Program class for test hosting
+/// </summary>
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        // Entry point for testing
     }
 }

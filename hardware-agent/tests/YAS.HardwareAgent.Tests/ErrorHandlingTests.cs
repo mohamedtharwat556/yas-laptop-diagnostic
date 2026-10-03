@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 using System.Net;
 using System.Text.Json;
@@ -37,5 +39,16 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Response should still have valid structure
         Assert.True(json.RootElement.TryGetProperty("metadata", out _));
+    }
+}
+
+/// <summary>
+/// Program class for test hosting
+/// </summary>
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        // Entry point for testing
     }
 }
