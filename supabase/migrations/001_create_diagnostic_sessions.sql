@@ -38,6 +38,7 @@ CHECK (status IN ('created', 'waiting_for_agent', 'running', 'completed', 'cance
 -- Enable Row Level Security
 ALTER TABLE diagnostic_sessions ENABLE ROW LEVEL SECURITY;
 
+<<<<<<< HEAD
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Allow public read access" ON diagnostic_sessions;
 DROP POLICY IF EXISTS "Allow public insert access" ON diagnostic_sessions;
@@ -46,18 +47,31 @@ DROP POLICY IF EXISTS "Allow public update access" ON diagnostic_sessions;
 -- Policy: Allow anyone to read sessions (read-only for public)
 -- Note: In production, this should be restricted to authenticated users
 CREATE POLICY "Allow public read access"
+=======
+-- Policy: Allow anyone to read sessions (read-only for public)
+-- Note: In production, this should be restricted to authenticated users
+CREATE POLICY IF NOT EXISTS "Allow public read access"
+>>>>>>> c40a4883a937a7ca36fb0afc725fbdf1d4ffba67
 ON diagnostic_sessions FOR SELECT
 TO anon
 USING (true);
 
 -- Policy: Allow anyone to insert sessions (for creating new diagnostic sessions)
+<<<<<<< HEAD
 CREATE POLICY "Allow public insert access"
+=======
+CREATE POLICY IF NOT EXISTS "Allow public insert access"
+>>>>>>> c40a4883a937a7ca36fb0afc725fbdf1d4ffba67
 ON diagnostic_sessions FOR INSERT
 TO anon
 WITH CHECK (true);
 
 -- Policy: Allow anyone to update sessions (for updating during diagnostic)
+<<<<<<< HEAD
 CREATE POLICY "Allow public update access"
+=======
+CREATE POLICY IF NOT EXISTS "Allow public update access"
+>>>>>>> c40a4883a937a7ca36fb0afc725fbdf1d4ffba67
 ON diagnostic_sessions FOR UPDATE
 TO anon
 USING (true)
