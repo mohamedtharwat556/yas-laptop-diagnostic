@@ -1224,6 +1224,32 @@
     color: var(--color-neutral-600);
 }
 
+/* Device Info Sections */
+.device-info-section {
+    margin-bottom: var(--spacing-6);
+}
+
+.device-info-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-neutral-700);
+    margin-bottom: var(--spacing-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.device-info-card.device-info-warning {
+    background-color: var(--color-warning-bg);
+    border-left: 4px solid var(--color-warning);
+}
+
+.device-info-note {
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-600);
+    margin-top: var(--spacing-2);
+    line-height: 1.5;
+}
+
 /* Responsive Client */
 @media (max-width: 768px) {
     .client-main {

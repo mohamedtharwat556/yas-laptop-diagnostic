@@ -426,9 +426,172 @@ const DiagnosticEngine = {
     // عرض معلومات الجهاز
     displayDeviceInfo: function(deviceInfo) {
         const container = document.getElementById('deviceInfoGrid');
-        
+
         let html = '';
-        
+
+        // Check if using new normalized structure or old structure
+        const isNewStructure = deviceInfo.computer && deviceInfo.operatingSystem;
+
+        if (isNewStructure) {
+            // New normalized structure from Hardware Agent
+            html += this.displayNormalizedDeviceInfo(deviceInfo);
+        } else {
+            // Old structure (backward compatibility)
+            html += this.displayLegacyDeviceInfo(deviceInfo);
+        }
+
+        container.innerHTML = html;
+    },
+
+    // عرض معلومات الجهاز (Normalized Structure)
+    displayNormalizedDeviceInfo: function(deviceInfo) {
+        let html = '';
+
+        // Computer Info
+        const manufacturer = this.getInfoValue(deviceInfo.computer?.manufacturer);
+        const model = this.getInfoValue(deviceInfo.computer?.model);
+        const deviceType = this.getInfoValue(deviceInfo.computer?.deviceType);
+
+        if (manufacturer || model || deviceType) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">معلومات الجهاز</h3>';
+
+            if (manufacturer) {
+                html += this.createDeviceInfoCard('الشركة المصنعة', manufacturer);
+            }
+            if (model) {
+                html += this.createDeviceInfoCard('الموديل', model);
+            }
+            if (deviceType) {
+                html += this.createDeviceInfoCard('نوع الجهاز', deviceType);
+            }
+
+            html += '</div>';
+        }
+
+        // Operating System
+        const osName = this.getInfoValue(deviceInfo.operatingSystem?.name);
+        const osVersion = this.getInfoValue(deviceInfo.operatingSystem?.version);
+        const osBuild = this.getInfoValue(deviceInfo.operatingSystem?.build);
+
+        if (osName) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">نظام التشغيل</h3>';
+            html += this.createDeviceInfoCard('النظام', osName);
+            if (osVersion) {
+                html += this.createDeviceInfoCard('الإصدار', osVersion);
+            }
+            if (osBuild) {
+                html += this.createDeviceInfoCard('البناء', osBuild);
+            }
+            html += '</div>';
+        }
+
+        // CPU
+        const cpuName = this.getInfoValue(deviceInfo.cpu?.name);
+        const cpuCores = this.getInfoValue(deviceInfo.cpu?.cores);
+        const cpuLogical = this.getInfoValue(deviceInfo.cpu?.logicalProcessors);
+
+        if (cpuName || cpuCores) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">المعالج</h3>';
+            if (cpuName) {
+                html += this.createDeviceInfoCard('النوع', cpuName);
+            }
+            if (cpuCores) {
+                html += this.createDeviceInfoCard('الأنوية الفعلية', cpuCores);
+            }
+            if (cpuLogical) {
+                html += this.createDeviceInfoCard('المعالجات المنطقية', cpuLogical);
+            }
+            html += '</div>';
+        }
+
+        // Memory
+        const ramGB = this.getInfoValue(deviceInfo.memory?.totalGB);
+
+        if (ramGB) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">الذاكرة</h3>';
+            html += this.createDeviceInfoCard('السعة', `${ramGB} GB`);
+            html += '</div>';
+        }
+
+        // GPU
+        if (deviceInfo.gpu && deviceInfo.gpu.length > 0) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">الرسوميات</h3>';
+            deviceInfo.gpu.forEach((gpu, index) => {
+                const gpuName = this.getInfoValue(gpu.name);
+                if (gpuName) {
+                    html += this.createDeviceInfoCard(index === 0 ? 'بطاقة الرسوميات' : `بطاقة الرسوميات ${index + 1}`, gpuName);
+                }
+            });
+            html += '</div>';
+        }
+
+        // Storage
+        if (deviceInfo.storage && deviceInfo.storage.length > 0) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">التخزين</h3>';
+            deviceInfo.storage.forEach((disk, index) => {
+                const model = this.getInfoValue(disk.model);
+                const type = this.getInfoValue(disk.type);
+                const capacityGB = this.getInfoValue(disk.capacityGB);
+                const usedGB = disk.usedBytes ? `${Math.round(disk.usedBytes / 1073741824)} GB` : null;
+                const freeGB = disk.freeBytes ? `${Math.round(disk.freeBytes / 1073741824)} GB` : null;
+
+                if (model) {
+                    html += this.createDeviceInfoCard(index === 0 ? 'القرص' : `القرص ${index + 1}`, model);
+                }
+                if (type) {
+                    html += this.createDeviceInfoCard('النوع', type);
+                }
+                if (capacityGB) {
+                    html += this.createDeviceInfoCard('السعة', `${capacityGB} GB`);
+                }
+                if (usedGB) {
+                    html += this.createDeviceInfoCard('المستخدم', usedGB);
+                }
+                if (freeGB) {
+                    html += this.createDeviceInfoCard('المتاح', freeGB);
+                }
+            });
+            html += '</div>';
+        } else if (deviceInfo.storageWarning) {
+            // Browser limitation warning
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">التخزين</h3>';
+            html += `<div class="device-info-card device-info-warning">`;
+            html += `<div class="device-info-label">السعة الحقيقية</div>`;
+            html += `<div class="device-info-value unavailable">غير متاحة من المتصفح</div>`;
+            html += `<div class="device-info-note">${deviceInfo.storageWarning}</div>`;
+            html += `</div></div>`;
+        }
+
+        // Battery
+        const batteryPresent = this.getInfoValue(deviceInfo.battery?.present);
+        const batteryPercentage = this.getInfoValue(deviceInfo.battery?.percentage);
+        const batteryCharging = this.getInfoValue(deviceInfo.battery?.charging);
+
+        if (batteryPresent) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">البطارية</h3>';
+            if (batteryPercentage) {
+                html += this.createDeviceInfoCard('المستوى', `${batteryPercentage}%`);
+            }
+            if (batteryCharging !== null) {
+                html += this.createDeviceInfoCard('الحالة', batteryCharging ? 'جاري الشحن' : 'غير مشحون');
+            }
+            html += '</div>';
+        }
+
+        // Browser-specific info (always show these)
+        html += '<div class="device-info-section"><h3 class="device-info-section-title">معلومات المتصفح</h3>';
+        html += this.createDeviceInfoCard('المتصفح', deviceInfo.browser);
+        html += this.createDeviceInfoCard('دقة الشاشة', `${deviceInfo.screen.width} × ${deviceInfo.screen.height}`);
+        html += this.createDeviceInfoCard('Viewport', `${deviceInfo.viewport.width} × ${deviceInfo.viewport.height}`);
+        html += '</div>';
+
+        return html;
+    },
+
+    // عرض معلومات الجهاز (Legacy Structure - Backward Compatibility)
+    displayLegacyDeviceInfo: function(deviceInfo) {
+        let html = '';
+
         const infoItems = [
             { label: 'نظام التشغيل', value: deviceInfo.os },
             { label: 'المتصفح', value: deviceInfo.browser },
@@ -440,7 +603,7 @@ const DiagnosticEngine = {
             { label: 'GPU', value: deviceInfo.gpu.renderer || 'غير متاح' },
             { label: 'الشبكة', value: deviceInfo.network.online ? 'متصل' : 'غير متصل' }
         ];
-        
+
         infoItems.forEach(item => {
             const unavailable = item.value === 'غير متاح' || (typeof item.value === 'string' && item.value.includes('غير متاح'));
             html += `
@@ -450,8 +613,96 @@ const DiagnosticEngine = {
                 </div>
             `;
         });
-        
-        container.innerHTML = html;
+
+        return html;
+    },
+
+    // Helper: Get value from info field (handles {value, source, confidence} structure)
+    getInfoValue: function(field) {
+        if (!field) return null;
+
+        if (typeof field === 'object' && field.value !== undefined) {
+            return field.value;
+        }
+
+        return field;
+    },
+
+    // Helper: Create device info card
+    createDeviceInfoCard: function(label, value) {
+        const unavailable = value === null || value === 'غير متاح' || (typeof value === 'string' && value.includes('غير متاح'));
+        return `
+            <div class="device-info-card">
+                <div class="device-info-label">${label}</div>
+                <div class="device-info-value ${unavailable ? 'unavailable' : ''}">${value}</div>
+            </div>
+        `;
+    },
+
+    // Update Agent Status UI
+    updateAgentStatus: async function() {
+        const indicator = document.getElementById('agentStatusIndicator');
+        const details = document.getElementById('agentStatusDetails');
+        const statusDot = indicator?.querySelector('.status-dot');
+        const statusText = indicator?.querySelector('.status-text');
+
+        if (!indicator) return;
+
+        statusDot.classList.remove('connected', 'disconnected');
+        statusText.textContent = 'جاري التحقق من مساعد فحص الجهاز...';
+
+        const connected = await HardwareAgent.detectAgent();
+
+        if (connected) {
+            statusDot.classList.add('connected');
+            statusText.textContent = 'مساعد فحص الجهاز متصل';
+            if (details) details.style.display = 'none';
+        } else {
+            statusDot.classList.add('disconnected');
+            statusText.textContent = 'مساعد فحص الجهاز غير متصل';
+            if (details) {
+                details.style.display = 'block';
+                details.querySelector('.agent-detail').textContent = 'سيتم استخدام معلومات المتصفح المتاحة';
+            }
+        }
+    },
+
+    // Setup Refresh Hardware Button
+    setupRefreshButton: function() {
+        const refreshBtn = document.getElementById('refreshHardwareBtn');
+        if (!refreshBtn) return;
+
+        refreshBtn.addEventListener('click', async () => {
+            const originalText = refreshBtn.innerHTML;
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = 'جاري تحديث معلومات الجهاز...';
+
+            try {
+                // Refresh agent status
+                await this.updateAgentStatus();
+
+                // Re-detect device info
+                const deviceInfo = await this.detectDeviceInfo();
+
+                // Update session if exists
+                const session = AppState.getCurrentSession();
+                if (session) {
+                    session.deviceInfo = deviceInfo;
+                    AppState.saveDeviceInfo(deviceInfo);
+                }
+
+                // Update UI
+                this.displayDeviceInfo(deviceInfo);
+
+                console.log('Hardware info refreshed successfully');
+            } catch (error) {
+                console.error('Failed to refresh hardware info:', error);
+                alert('تعذر تحديث معلومات الجهاز. سيتم استخدام المعلومات المتاحة.');
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = originalText;
+            }
+        });
     },
     
     // عرض قائمة الاختبارات
