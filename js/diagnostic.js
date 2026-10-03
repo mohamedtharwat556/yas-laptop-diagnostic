@@ -832,6 +832,23 @@ const DiagnosticEngine = {
                 });
             });
 
+            // إيقاف عند النقر خارج المحتوى
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    // إيقاف الـ stream
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+
+                    overlay.remove();
+                    container.style.display = 'block';
+                    resolve({
+                        status: 'cancelled',
+                        details: 'تم إلغاء الاختبار'
+                    });
+                }
+            });
+
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then((mediaStream) => {
                     stream = mediaStream;
@@ -935,6 +952,28 @@ const DiagnosticEngine = {
                     status: 'cancelled',
                     details: 'تم إلغاء الاختبار'
                 });
+            });
+
+            // إيقاف عند النقر خارج المحتوى
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    // إيقاف الـ stream
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+
+                    // إغلاق AudioContext
+                    if (audioContext) {
+                        audioContext.close();
+                    }
+
+                    overlay.remove();
+                    container.style.display = 'block';
+                    resolve({
+                        status: 'cancelled',
+                        details: 'تم إلغاء الاختبار'
+                    });
+                }
             });
 
             let stream = null;
@@ -1116,18 +1155,25 @@ const DiagnosticEngine = {
             let leftTested = false;
             let rightTested = false;
 
-            // زر الإغلاق
-            closeBtn.addEventListener('click', () => {
-                // إيقاف الصوت تماماً
+            // دالة مساعدة لإيقاف الصوت
+            const stopSound = () => {
                 if (oscillator) {
-                    oscillator.stop();
+                    try {
+                        oscillator.stop();
+                    } catch (e) {}
                     oscillator = null;
                 }
                 if (audioContext) {
-                    audioContext.close();
+                    try {
+                        audioContext.close();
+                    } catch (e) {}
                     audioContext = null;
                 }
+            };
 
+            // زر الإغلاق
+            closeBtn.addEventListener('click', () => {
+                stopSound();
                 overlay.remove();
                 container.style.display = 'block';
                 resolve({
@@ -1136,8 +1182,24 @@ const DiagnosticEngine = {
                 });
             });
 
+            // إيقاف الصوت عند النقر خارج المحتوى
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    stopSound();
+                    overlay.remove();
+                    container.style.display = 'block';
+                    resolve({
+                        status: 'cancelled',
+                        details: 'تم إلغاء الاختبار'
+                    });
+                }
+            });
+
             // اختبار السماعة اليسرى
             playLeftBtn.addEventListener('click', () => {
+                // إيقاف أي صوت موجود مسبقاً
+                stopSound();
+
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     oscillator = audioContext.createOscillator();
@@ -1165,14 +1227,7 @@ const DiagnosticEngine = {
 
                     // تشغيل لمدة 2 ثانية
                     setTimeout(() => {
-                        if (oscillator) {
-                            oscillator.stop();
-                            oscillator = null;
-                        }
-                        if (audioContext) {
-                            audioContext.close();
-                            audioContext = null;
-                        }
+                        stopSound();
                         leftTested = true;
                         statusEl.textContent = 'اكتمل اختبار السماعة اليسرى';
                         if (!resultsEl.innerHTML) {
@@ -1194,6 +1249,9 @@ const DiagnosticEngine = {
 
             // اختبار السماعة اليمنى
             playRightBtn.addEventListener('click', () => {
+                // إيقاف أي صوت موجود مسبقاً
+                stopSound();
+
                 try {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     oscillator = audioContext.createOscillator();
@@ -1221,14 +1279,7 @@ const DiagnosticEngine = {
 
                     // تشغيل لمدة 2 ثانية
                     setTimeout(() => {
-                        if (oscillator) {
-                            oscillator.stop();
-                            oscillator = null;
-                        }
-                        if (audioContext) {
-                            audioContext.close();
-                            audioContext = null;
-                        }
+                        stopSound();
                         rightTested = true;
                         statusEl.textContent = 'اكتمل اختبار السماعة اليمنى';
                         if (!resultsEl.innerHTML) {
@@ -1249,16 +1300,7 @@ const DiagnosticEngine = {
             });
 
             yesBtn.addEventListener('click', () => {
-                // إيقاف الصوت تماماً
-                if (oscillator) {
-                    oscillator.stop();
-                    oscillator = null;
-                }
-                if (audioContext) {
-                    audioContext.close();
-                    audioContext = null;
-                }
-
+                stopSound();
                 overlay.remove();
                 container.style.display = 'block';
                 resolve({
@@ -1268,16 +1310,7 @@ const DiagnosticEngine = {
             });
 
             noBtn.addEventListener('click', () => {
-                // إيقاف الصوت تماماً
-                if (oscillator) {
-                    oscillator.stop();
-                    oscillator = null;
-                }
-                if (audioContext) {
-                    audioContext.close();
-                    audioContext = null;
-                }
-
+                stopSound();
                 overlay.remove();
                 container.style.display = 'block';
                 resolve({
