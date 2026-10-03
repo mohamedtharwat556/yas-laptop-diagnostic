@@ -206,6 +206,15 @@ const Client = {
                 </div>
             `;
         }
+
+        if (deviceInfo.laptopModel) {
+            html += `
+                <div class="device-info-detail-item">
+                    <div class="device-info-detail-label">نوع الجهاز</div>
+                    <div class="device-info-detail-value">${deviceInfo.laptopModel}</div>
+                </div>
+            `;
+        }
         
         if (deviceInfo.ram) {
             html += `
@@ -247,7 +256,8 @@ const Client = {
             'failed': { class: 'badge-danger', text: 'فشل' },
             'warning': { class: 'badge-warning', text: 'تحذير' },
             'limited': { class: 'badge-warning', text: 'محدود' },
-            'not_available': { class: 'badge-neutral', text: 'غير متاح' }
+            'not_available': { class: 'badge-neutral', text: 'غير متاح' },
+            'cancelled': { class: 'badge-neutral', text: 'ملغي' }
         };
 
         // تصنيف الاختبارات

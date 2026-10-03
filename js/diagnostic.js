@@ -145,6 +145,9 @@ const DiagnosticEngine = {
             architecture: navigator.userAgentData?.platform || navigator.platform,
             model: this.detectCPUModel()
         };
+
+        // نوع اللابتوب (محدود)
+        info.laptopModel = this.detectLaptopModel();
         
         // الذاكرة
         info.ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'غير متاح';
@@ -243,6 +246,33 @@ const DiagnosticEngine = {
             return model;
         } catch (e) {
             return 'غير متاح - قيود المتصفح';
+        }
+    },
+
+    // كشف نوع اللابتوب (محدود جداً)
+    detectLaptopModel: function() {
+        // Browser لا يستطيع قراءة نوع اللابتوب أو الشركة المصنعة
+        // بسبب قيود الخصوصية الشديدة
+        try {
+            // محاولة القراءة من userAgent لكنها غير موثوقة على الإطلاق
+            const ua = navigator.userAgent;
+
+            // بعض الأعلام في userAgent قد تشير إلى نوع الجهاز
+            if (ua.includes('Windows')) {
+                return 'Windows Laptop (التفاصيل غير متاحة - قيود الخصوصية)';
+            } else if (ua.includes('Mac')) {
+                return 'MacBook (التفاصيل غير متاحة - قيود الخصوصية)';
+            } else if (ua.includes('Linux')) {
+                return 'Linux Laptop (التفاصيل غير متاحة - قيود الخصوصية)';
+            } else if (ua.includes('Android')) {
+                return 'Android Device (التفاصيل غير متاحة - قيود الخصوصية)';
+            } else if (ua.includes('iPhone') || ua.includes('iPad')) {
+                return 'iOS Device (التفاصيل غير متاحة - قيود الخصوصية)';
+            }
+
+            return 'غير متاح - قيود الخصوصية الشديدة للمتصفح';
+        } catch (e) {
+            return 'غير متاح - قيود الخصوصية الشديدة للمتصفح';
         }
     },
     
@@ -591,6 +621,7 @@ const DiagnosticEngine = {
                 <div class="test-overlay-header keyboard-overlay-header">
                     <h2>اختبار لوحة المفاتيح</h2>
                     <p>اضغط على المفاتيح الموجودة في لوحة المفاتيح الفعلية للابتوب واحدًا تلو الآخر</p>
+                    <button class="btn btn-sm btn-secondary close-overlay-btn" id="closeKeyboardBtn">إغلاق</button>
                 </div>
                 <div class="test-overlay-content" id="keyboardTestContent"></div>
                 <div class="test-overlay-actions keyboard-overlay-actions">
@@ -607,6 +638,16 @@ const DiagnosticEngine = {
                 overlay.remove();
                 container.style.display = 'block';
                 resolve(result);
+            });
+
+            document.getElementById('closeKeyboardBtn').addEventListener('click', () => {
+                KeyboardTest.finish();
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'cancelled',
+                    details: 'تم إلغاء الاختبار'
+                });
             });
         });
     },
@@ -630,6 +671,7 @@ const DiagnosticEngine = {
                 <div class="test-overlay-header mouse-overlay-header">
                     <h2>اختبار الماوس / Touchpad</h2>
                     <p>سنتقوم باختبار وظائف المؤشر. اتبع التعليمات التي تظهر.</p>
+                    <button class="btn btn-sm btn-secondary close-overlay-btn" id="closeMouseBtn">إغلاق</button>
                 </div>
                 <div class="test-overlay-content" id="mouseTestContent"></div>
                 <div class="test-overlay-actions mouse-overlay-actions">
@@ -654,6 +696,17 @@ const DiagnosticEngine = {
             contentEl.appendChild(testArea);
 
             const actionBtn = document.getElementById('finishMouseBtn');
+            const closeBtn = document.getElementById('closeMouseBtn');
+
+            // زر الإغلاق
+            closeBtn.addEventListener('click', () => {
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'cancelled',
+                    details: 'تم إلغاء الاختبار'
+                });
+            });
 
             testArea.addEventListener('mousemove', () => {
                 if (!testsPassed.movement) {
@@ -739,6 +792,7 @@ const DiagnosticEngine = {
                 <div class="test-overlay-header camera-overlay-header">
                     <h2>اختبار الكاميرا</h2>
                     <p>سنقوم باختبار الكاميرا. يرجى السماح للمتصفح باستخدام الكاميرا.</p>
+                    <button class="btn btn-sm btn-secondary close-overlay-btn" id="closeCameraBtn">إغلاق</button>
                 </div>
                 <div class="test-overlay-content" id="cameraTestContent"></div>
                 <div class="test-overlay-actions camera-overlay-actions">
@@ -759,8 +813,24 @@ const DiagnosticEngine = {
             const videoEl = document.getElementById('cameraPreview');
             const statusEl = document.getElementById('cameraStatus');
             const finishBtn = document.getElementById('finishCameraBtn');
+            const closeBtn = document.getElementById('closeCameraBtn');
 
             let stream = null;
+
+            // زر الإغلاق
+            closeBtn.addEventListener('click', () => {
+                // إيقاف الـ stream
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'cancelled',
+                    details: 'تم إلغاء الاختبار'
+                });
+            });
 
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then((mediaStream) => {
@@ -821,6 +891,7 @@ const DiagnosticEngine = {
                 <div class="test-overlay-header mic-overlay-header">
                     <h2>اختبار الميكروفون</h2>
                     <p>سنقوم باختبار الميكروفون. يرجى السماح للمتصفح باستخدام الميكروفون، ثم تحدث أو اضغط بالقرب من الميكروفون.</p>
+                    <button class="btn btn-sm btn-secondary close-overlay-btn" id="closeMicBtn">إغلاق</button>
                 </div>
                 <div class="test-overlay-content" id="micTestContent"></div>
                 <div class="test-overlay-actions mic-overlay-actions">
@@ -844,6 +915,27 @@ const DiagnosticEngine = {
             const levelBar = document.getElementById('micLevelBar');
             const statusEl = document.getElementById('micStatus');
             const finishBtn = document.getElementById('finishMicBtn');
+            const closeBtn = document.getElementById('closeMicBtn');
+
+            // زر الإغلاق
+            closeBtn.addEventListener('click', () => {
+                // إيقاف الـ stream
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // إغلاق AudioContext
+                if (audioContext) {
+                    audioContext.close();
+                }
+
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'cancelled',
+                    details: 'تم إلغاء الاختبار'
+                });
+            });
 
             let stream = null;
             let audioContext = null;
@@ -936,6 +1028,28 @@ const DiagnosticEngine = {
                     });
                 }
             });
+
+            // إيقاف كل شيء عند إغلاق الـ overlay
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    // إيقاف الـ stream
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+
+                    // إغلاق AudioContext
+                    if (audioContext) {
+                        audioContext.close();
+                    }
+
+                    overlay.remove();
+                    container.style.display = 'block';
+                    resolve({
+                        status: 'cancelled',
+                        details: 'تم إلغاء الاختبار'
+                    });
+                }
+            });
         });
     },
 
@@ -958,6 +1072,7 @@ const DiagnosticEngine = {
                 <div class="test-overlay-header speaker-overlay-header">
                     <h2>فحص السماعات</h2>
                     <p>اضغط تشغيل للاستماع إلى نغمة الاختبار.</p>
+                    <button class="btn btn-sm btn-secondary close-overlay-btn" id="closeSpeakerBtn">إغلاق</button>
                 </div>
                 <div class="test-overlay-content" id="speakerTestContent">
                     <div class="speaker-test-container">
@@ -983,6 +1098,27 @@ const DiagnosticEngine = {
             const actionsEl = document.getElementById('speakerActions');
             const yesBtn = document.getElementById('speakerYesBtn');
             const noBtn = document.getElementById('speakerNoBtn');
+            const closeBtn = document.getElementById('closeSpeakerBtn');
+
+            // زر الإغلاق
+            closeBtn.addEventListener('click', () => {
+                // إيقاف الصوت تماماً
+                if (oscillator) {
+                    oscillator.stop();
+                    oscillator = null;
+                }
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                }
+
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'cancelled',
+                    details: 'تم إلغاء الاختبار'
+                });
+            });
 
             let audioContext = null;
             let oscillator = null;
@@ -1006,10 +1142,13 @@ const DiagnosticEngine = {
 
                     // تشغيل لمدة 2 ثانية
                     setTimeout(() => {
-                        oscillator.stop();
-                        oscillator = null;
+                        if (oscillator) {
+                            oscillator.stop();
+                            oscillator = null;
+                        }
                         if (audioContext) {
                             audioContext.close();
+                            audioContext = null;
                         }
                         statusEl.textContent = 'اكتمل تشغيل الصوت';
                         playBtn.style.display = 'none';
@@ -1025,6 +1164,16 @@ const DiagnosticEngine = {
             });
 
             yesBtn.addEventListener('click', () => {
+                // إيقاف الصوت تماماً
+                if (oscillator) {
+                    oscillator.stop();
+                    oscillator = null;
+                }
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                }
+
                 overlay.remove();
                 container.style.display = 'block';
                 resolve({
@@ -1034,12 +1183,44 @@ const DiagnosticEngine = {
             });
 
             noBtn.addEventListener('click', () => {
+                // إيقاف الصوت تماماً
+                if (oscillator) {
+                    oscillator.stop();
+                    oscillator = null;
+                }
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                }
+
                 overlay.remove();
                 container.style.display = 'block';
                 resolve({
                     status: 'warning',
                     details: 'تم تشغيل اختبار الصوت لكن المستخدم لم يسمعه بوضوح'
                 });
+            });
+
+            // إيقاف عند النقر خارج المحتوى
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    // إيقاف الصوت تماماً
+                    if (oscillator) {
+                        oscillator.stop();
+                        oscillator = null;
+                    }
+                    if (audioContext) {
+                        audioContext.close();
+                        audioContext = null;
+                    }
+
+                    overlay.remove();
+                    container.style.display = 'block';
+                    resolve({
+                        status: 'cancelled',
+                        details: 'تم إلغاء الاختبار'
+                    });
+                }
             });
         });
     },
@@ -1327,7 +1508,8 @@ const DiagnosticEngine = {
             'warning': 'تحذير',
             'limited': 'محدود',
             'not_available': 'غير متاح',
-            'pending': 'قيد الانتظار'
+            'pending': 'قيد الانتظار',
+            'cancelled': 'ملغي'
         };
         return statusMap[status] || status;
     },

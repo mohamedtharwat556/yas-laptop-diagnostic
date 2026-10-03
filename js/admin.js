@@ -298,7 +298,8 @@ const Admin = {
             'failed': { class: 'badge-danger', text: 'فشل' },
             'warning': { class: 'badge-warning', text: 'تحذير' },
             'limited': { class: 'badge-warning', text: 'محدود' },
-            'not_available': { class: 'badge-neutral', text: 'غير متاح' }
+            'not_available': { class: 'badge-neutral', text: 'غير متاح' },
+            'cancelled': { class: 'badge-neutral', text: 'ملغي' }
         };
 
         let html = '<div class="test-results-list">';

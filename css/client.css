@@ -933,12 +933,18 @@
     align-items: center;
     justify-content: center;
     padding: var(--spacing-8);
+    cursor: default;
+}
+
+.test-overlay > * {
+    cursor: default;
 }
 
 .test-overlay-header {
     text-align: center;
     margin-bottom: var(--spacing-8);
     color: var(--color-neutral-100);
+    position: relative;
 }
 
 .test-overlay-header h2 {
@@ -953,6 +959,13 @@
     color: var(--color-neutral-300);
     max-width: 600px;
     margin: 0 auto;
+}
+
+.close-overlay-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: var(--font-size-sm);
 }
 
 .test-overlay-actions {

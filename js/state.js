@@ -109,6 +109,9 @@ const AppState = {
             case 'not_available':
                 summary.notAvailable++;
                 break;
+            case 'cancelled':
+                // لا نضيف للمجموع - المستخدم ألغى الاختبار
+                break;
         }
     },
 
