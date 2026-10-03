@@ -1133,6 +1133,39 @@
     padding: var(--spacing-2) 0;
 }
 
+/* Limitations List */
+.limitations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.limitation-item {
+    padding: var(--spacing-3);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-700);
+    line-height: 1.6;
+}
+
+.limitation-item::before {
+    content: "ℹ ";
+    color: var(--color-primary);
+    font-weight: var(--font-weight-bold);
+}
+
+/* Customer Summary */
+.customer-summary {
+    padding: var(--spacing-4);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-base);
+    color: var(--color-neutral-800);
+    line-height: 1.8;
+}
+
 /* Responsive Client */
 @media (max-width: 768px) {
     .client-main {

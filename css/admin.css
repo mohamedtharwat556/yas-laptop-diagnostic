@@ -5,6 +5,180 @@
     min-height: 100vh;
 }
 
+/* Technician Summary */
+.technician-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    padding: var(--spacing-4);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-lg);
+}
+
+.summary-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-600);
+    font-weight: var(--font-weight-medium);
+}
+
+.summary-value {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-neutral-800);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-warning {
+    color: var(--color-warning);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-neutral {
+    color: var(--color-neutral-600);
+}
+
+/* Issues List */
+.issues-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.issue-item {
+    padding: var(--spacing-4);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-lg);
+    border-right: 4px solid var(--color-neutral-300);
+}
+
+.issue-item[data-severity="high"] {
+    border-right-color: var(--color-danger);
+}
+
+.issue-item[data-severity="medium"] {
+    border-right-color: var(--color-warning);
+}
+
+.issue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-2);
+}
+
+.issue-title {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-neutral-800);
+}
+
+.issue-description {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-600);
+    margin-bottom: var(--spacing-2);
+}
+
+.issue-source {
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-500);
+}
+
+/* Timeline */
+.timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.timeline-item {
+    display: flex;
+    gap: var(--spacing-4);
+    padding: var(--spacing-3);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-md);
+}
+
+.timeline-time {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-600);
+    font-family: monospace;
+    min-width: 80px;
+}
+
+.timeline-event {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-800);
+}
+
+/* Technician Notes */
+.technician-notes-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.technician-notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.technician-note-item {
+    padding: var(--spacing-4);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-lg);
+}
+
+.note-header {
+    margin-bottom: var(--spacing-2);
+}
+
+.note-time {
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-500);
+}
+
+.note-content {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-800);
+    line-height: 1.6;
+}
+
+.technician-notes-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.technician-notes-input textarea {
+    width: 100%;
+    padding: var(--spacing-3);
+    border: 1px solid var(--color-neutral-300);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    resize: vertical;
+}
+
+.technician-notes-input textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 /* Admin Login Container */
 .admin-login-container {
     display: flex;
