@@ -232,61 +232,134 @@ const Admin = {
     // عرض معلومات الجهاز
     displayDeviceInfo: function(deviceInfo) {
         const container = document.getElementById('detailDeviceInfo');
-        
+
         if (!deviceInfo) {
             container.innerHTML = '<p class="empty-state">لا توجد معلومات</p>';
             return;
         }
-        
+
         let html = '<div class="info-grid">';
-        
-        if (deviceInfo.os) {
-            html += `
-                <div class="info-item">
-                    <span class="info-label">نظام التشغيل:</span>
-                    <span class="info-value">${deviceInfo.os}</span>
-                </div>
-            `;
+
+        // Check if using new normalized structure
+        const isNewStructure = deviceInfo.computer && deviceInfo.operatingSystem;
+
+        if (isNewStructure) {
+            // New normalized structure
+            const manufacturer = this.getInfoValue(deviceInfo.computer?.manufacturer);
+            const model = this.getInfoValue(deviceInfo.computer?.model);
+            const deviceType = this.getInfoValue(deviceInfo.computer?.deviceType);
+            const osName = this.getInfoValue(deviceInfo.operatingSystem?.name);
+            const osVersion = this.getInfoValue(deviceInfo.operatingSystem?.version);
+            const cpuName = this.getInfoValue(deviceInfo.cpu?.name);
+            const cpuCores = this.getInfoValue(deviceInfo.cpu?.cores);
+            const ramGB = this.getInfoValue(deviceInfo.memory?.totalGB);
+
+            if (manufacturer) {
+                html += this.createInfoItem('الشركة المصنعة', manufacturer);
+            }
+            if (model) {
+                html += this.createInfoItem('الموديل', model);
+            }
+            if (deviceType) {
+                html += this.createInfoItem('نوع الجهاز', deviceType);
+            }
+            if (osName) {
+                html += this.createInfoItem('نظام التشغيل', osName);
+            }
+            if (osVersion) {
+                html += this.createInfoItem('الإصدار', osVersion);
+            }
+            if (cpuName) {
+                html += this.createInfoItem('المعالج', cpuName);
+            }
+            if (cpuCores) {
+                html += this.createInfoItem('الأنوية', cpuCores);
+            }
+            if (ramGB) {
+                html += this.createInfoItem('الذاكرة', `${ramGB} GB`);
+            }
+
+            // GPU
+            if (deviceInfo.gpu && deviceInfo.gpu.length > 0) {
+                deviceInfo.gpu.forEach((gpu, index) => {
+                    const gpuName = this.getInfoValue(gpu.name);
+                    if (gpuName) {
+                        html += this.createInfoItem(index === 0 ? 'الرسوميات' : `الرسوميات ${index + 1}`, gpuName);
+                    }
+                });
+            }
+
+            // Storage
+            if (deviceInfo.storage && deviceInfo.storage.length > 0) {
+                deviceInfo.storage.forEach((disk, index) => {
+                    const model = this.getInfoValue(disk.model);
+                    const type = this.getInfoValue(disk.type);
+                    const capacityGB = this.getInfoValue(disk.capacityGB);
+
+                    if (model) {
+                        html += this.createInfoItem(index === 0 ? 'التخزين' : `التخزين ${index + 1}`, model);
+                    }
+                    if (type) {
+                        html += this.createInfoItem('النوع', type);
+                    }
+                    if (capacityGB) {
+                        html += this.createInfoItem('السعة', `${capacityGB} GB`);
+                    }
+                });
+            } else if (deviceInfo.storageWarning) {
+                html += this.createInfoItem('التخزين', 'غير متاح من المتصفح');
+            }
+
+            // Show source for technician
+            if (deviceInfo.hardwareSource) {
+                html += '<div class="info-item" style="margin-top: 20px; border-top: 1px solid var(--color-neutral-200); padding-top: 10px;">';
+                html += `<span class="info-label">مصدر المعلومات:</span>`;
+                html += `<span class="info-value">${deviceInfo.hardwareSource === 'hardware-agent' ? 'Hardware Agent' : 'Browser'}</span>`;
+                html += '</div>';
+            }
+        } else {
+            // Legacy structure (backward compatibility)
+            if (deviceInfo.os) {
+                html += this.createInfoItem('نظام التشغيل', deviceInfo.os);
+            }
+            if (deviceInfo.browser) {
+                html += this.createInfoItem('المتصفح', deviceInfo.browser);
+            }
+            if (deviceInfo.screen) {
+                html += this.createInfoItem('دقة الشاشة', `${deviceInfo.screen.width} × ${deviceInfo.screen.height}`);
+            }
+            if (deviceInfo.cpu) {
+                html += this.createInfoItem('المعالج', `${deviceInfo.cpu.cores} نواة`);
+            }
+            if (deviceInfo.ram) {
+                html += this.createInfoItem('الذاكرة', deviceInfo.ram);
+            }
         }
-        
-        if (deviceInfo.browser) {
-            html += `
-                <div class="info-item">
-                    <span class="info-label">المتصفح:</span>
-                    <span class="info-value">${deviceInfo.browser}</span>
-                </div>
-            `;
-        }
-        
-        if (deviceInfo.screen) {
-            html += `
-                <div class="info-item">
-                    <span class="info-label">دقة الشاشة:</span>
-                    <span class="info-value">${deviceInfo.screen.width} × ${deviceInfo.screen.height}</span>
-                </div>
-            `;
-        }
-        
-        if (deviceInfo.cpu) {
-            html += `
-                <div class="info-item">
-                    <span class="info-label">المعالج:</span>
-                    <span class="info-value">${deviceInfo.cpu.cores} نواة</span>
-                </div>
-            `;
-        }
-        
-        if (deviceInfo.ram) {
-            html += `
-                <div class="info-item">
-                    <span class="info-label">الذاكرة:</span>
-                    <span class="info-value">${deviceInfo.ram}</span>
-                </div>
-            `;
-        }
-        
+
         html += '</div>';
         container.innerHTML = html;
+    },
+
+    // Helper: Get value from info field
+    getInfoValue: function(field) {
+        if (!field) return null;
+
+        if (typeof field === 'object' && field.value !== undefined) {
+            return field.value;
+        }
+
+        return field;
+    },
+
+    // Helper: Create info item
+    createInfoItem: function(label, value) {
+        const unavailable = value === null || value === 'غير متاح' || (typeof value === 'string' && value.includes('غير متاح'));
+        return `
+            <div class="info-item">
+                <span class="info-label">${label}:</span>
+                <span class="info-value ${unavailable ? 'unavailable' : ''}">${value}</span>
+            </div>
+        `;
     },
     
     // عرض نتائج الاختبارات
