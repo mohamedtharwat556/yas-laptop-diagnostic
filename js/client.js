@@ -35,9 +35,11 @@ const Client = {
             
             // معالجة إرسال النموذج
             form.addEventListener('submit', async (e) => {
+                console.log('Form submit event triggered');
                 e.preventDefault();
 
                 if (this.validateForm(form)) {
+                    console.log('Form validation passed');
                     const formData = new FormData(form);
                     const sessionData = {
                         customerName: formData.get('customerName'),
@@ -46,11 +48,14 @@ const Client = {
                         problemDescription: formData.get('problemDescription')
                     };
 
+                    console.log('Calling AppState.addSession with:', sessionData);
                     // إضافة جلسة جديدة (async for Supabase)
                     await AppState.addSession(sessionData);
 
                     // الانتقال إلى صفحة الفحص
                     window.location.href = 'diagnostic.html';
+                } else {
+                    console.log('Form validation failed');
                 }
             });
         }
