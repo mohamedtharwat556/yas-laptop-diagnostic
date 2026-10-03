@@ -488,10 +488,43 @@ const DiagnosticEngine = {
             nextBtn.addEventListener('click', () => {
                 currentColorIndex++;
                 if (currentColorIndex >= colors.length) {
-                    // اكمال الاختبار
-                    overlay.remove();
-                    container.style.display = 'block';
-                    this.showScreenQuestion(resolve);
+                    // عرض السؤال داخل الـ overlay
+                    colorArea.style.display = 'none';
+                    messageEl.style.display = 'none';
+                    stepEl.style.display = 'none';
+                    prevBtn.style.display = 'none';
+                    nextBtn.style.display = 'none';
+
+                    // إضافة سؤال الشاشة
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'screen-question-overlay';
+                    questionDiv.innerHTML = `
+                        <h3>هل لاحظت أي مشاكل في الشاشة؟</h3>
+                        <p>نقاط مضيئة أو مظلمة، خطوط، ألوان غير طبيعية</p>
+                        <div class="screen-question-buttons">
+                            <button class="btn btn-success btn-lg" id="screenNoProblemBtn">لا، الشاشة سليمة</button>
+                            <button class="btn btn-danger btn-lg" id="screenProblemBtn">نعم، توجد مشكلة</button>
+                        </div>
+                    `;
+                    overlay.appendChild(questionDiv);
+
+                    document.getElementById('screenNoProblemBtn').addEventListener('click', () => {
+                        overlay.remove();
+                        container.style.display = 'block';
+                        resolve({
+                            status: 'passed',
+                            details: 'Visual confirmation: لا توجد مشاكل ظاهرة'
+                        });
+                    });
+
+                    document.getElementById('screenProblemBtn').addEventListener('click', () => {
+                        overlay.remove();
+                        container.style.display = 'block';
+                        resolve({
+                            status: 'warning',
+                            details: 'المستخدم أشار إلى وجود مشاكل في الشاشة'
+                        });
+                    });
                 } else {
                     // تحديث اللون
                     colorArea.style.backgroundColor = colorHex[currentColorIndex];
@@ -521,35 +554,7 @@ const DiagnosticEngine = {
             });
         });
     },
-    
-    // عرض سؤال الشاشة
-    showScreenQuestion: function(resolve) {
-        const contentEl = document.getElementById('interactiveTestContent');
-        const actionsEl = document.getElementById('interactiveTestActions');
-        
-        contentEl.innerHTML = `
-            <div class="screen-question">
-                <h3>هل لاحظت أي مشاكل في الشاشة؟</h3>
-                <p>نقاط مضيئة أو مظلمة، خطوط، ألوان غير طبيعية</p>
-            </div>
-        `;
-        
-        actionsEl.innerHTML = `
-            <button class="btn btn-success btn-lg" id="screenNoIssue">لا، الشاشة سليمة</button>
-            <button class="btn btn-danger btn-lg" id="screenHasIssue">نعم، توجد مشكلة</button>
-        `;
-        
-        document.getElementById('screenNoIssue').addEventListener('click', () => {
-            this.hideInteractiveTest();
-            resolve({ status: 'passed', details: 'Visual confirmation: لا توجد مشاكل ظاهرة' });
-        });
-        
-        document.getElementById('screenHasIssue').addEventListener('click', () => {
-            this.hideInteractiveTest();
-            resolve({ status: 'warning', details: 'Customer reported visual issue' });
-        });
-    },
-    
+
     // عرض اختبار تفاعلي
     showInteractiveTest: function(title, description) {
         const container = document.getElementById('interactiveTestContainer');

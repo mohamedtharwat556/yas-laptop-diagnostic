@@ -601,6 +601,35 @@
     border-radius: var(--radius-md);
 }
 
+.screen-question-overlay {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    padding: var(--spacing-8);
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(10px);
+}
+
+.screen-question-overlay h3 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-neutral-100);
+    margin-bottom: var(--spacing-4);
+}
+
+.screen-question-overlay p {
+    font-size: var(--font-size-lg);
+    color: var(--color-neutral-300);
+    margin-bottom: var(--spacing-6);
+}
+
+.screen-question-buttons {
+    display: flex;
+    gap: var(--spacing-4);
+    justify-content: center;
+}
+
 /* Virtual Keyboard */
 .virtual-keyboard-container {
     background-color: var(--color-neutral-800);
