@@ -56,14 +56,21 @@ const AppState = {
     
     // إضافة جلسة فحص جديدة
     addSession: async function(sessionData) {
+        console.log('addSession called with data:', sessionData);
+        console.log('window.sessionService available:', !!window.sessionService);
+
         // Try to create session in Supabase via sessionService
         let supabaseSession = null;
         if (window.sessionService) {
             try {
+                console.log('Calling SessionService.createSession...');
                 supabaseSession = await window.sessionService.createSession(sessionData);
+                console.log('Supabase session created:', supabaseSession);
             } catch (error) {
                 console.error('Supabase session creation failed, using local fallback:', error);
             }
+        } else {
+            console.log('SessionService not available, using local-only mode');
         }
 
         const session = {

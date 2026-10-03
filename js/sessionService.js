@@ -91,7 +91,9 @@ class SessionService {
      * @returns {Promise<Object>} Session object
      */
     async createSession(customerData) {
+        console.log('SessionService.createSession called with:', customerData);
         const sessionCode = this.generateSessionCode();
+        console.log('Generated session code:', sessionCode);
         const session = {
             id: null, // Will be set by Supabase
             sessionCode,
@@ -112,9 +114,13 @@ class SessionService {
             updated_at: new Date().toISOString()
         };
 
+        console.log('Supabase available:', !!this.supabase);
+        console.log('Is online:', this.isOnline);
+
         // Try to create in Supabase
         if (this.supabase && this.isOnline) {
             try {
+                console.log('Attempting to insert session into Supabase...');
                 const { data, error } = await this.supabase
                     .from('diagnostic_sessions')
                     .insert([session])
@@ -143,6 +149,7 @@ class SessionService {
             }
         } else {
             // No Supabase available - use local storage
+            console.log('No Supabase or offline - using local storage');
             session.id = sessionCode;
             this.localSessions.set(sessionCode, session);
             this.pendingSync.set(sessionCode, session);
