@@ -55,14 +55,3 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.NotNull(version.GetString());
     }
 }
-
-/// <summary>
-/// Program class for test hosting
-/// </summary>
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        // Entry point for testing
-    }
-}

@@ -41,14 +41,3 @@ public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.True(json.RootElement.TryGetProperty("metadata", out _));
     }
 }
-
-/// <summary>
-/// Program class for test hosting
-/// </summary>
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        // Entry point for testing
-    }
-}

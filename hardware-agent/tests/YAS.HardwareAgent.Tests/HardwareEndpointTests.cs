@@ -93,14 +93,3 @@ public class HardwareEndpointTests : IClassFixture<WebApplicationFactory<Program
         Assert.Equal(JsonValueKind.Array, storage.ValueKind);
     }
 }
-
-/// <summary>
-/// Program class for test hosting
-/// </summary>
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        // Entry point for testing
-    }
-}
