@@ -33,6 +33,42 @@ const DiagnosticEngine = {
             name: 'فحص الميكروفون',
             type: 'permission',
             run: this.testMicrophone
+        },
+        {
+            id: 'speaker',
+            name: 'فحص السماعات',
+            type: 'interactive',
+            run: this.testSpeaker
+        },
+        {
+            id: 'network',
+            name: 'فحص الشبكة',
+            type: 'automatic',
+            run: this.testNetwork
+        },
+        {
+            id: 'battery',
+            name: 'فحص البطارية',
+            type: 'automatic',
+            run: this.testBattery
+        },
+        {
+            id: 'performance',
+            name: 'فحص الأداء',
+            type: 'automatic',
+            run: this.testPerformance
+        },
+        {
+            id: 'storage',
+            name: 'فحص التخزين',
+            type: 'automatic',
+            run: this.testStorage
+        },
+        {
+            id: 'gpu',
+            name: 'فحص الرسوميات',
+            type: 'automatic',
+            run: this.testGPU
         }
     ],
     
@@ -260,10 +296,12 @@ const DiagnosticEngine = {
 
         this.tests.forEach(test => {
             const isInteractive = test.type === 'interactive' || test.type === 'permission';
+            const isAutomatic = test.type === 'automatic';
             html += `
                 <div class="test-item" id="test-${test.id}">
                     <div class="test-item-info">
                         <div class="test-item-name">${test.name}</div>
+                        <div class="test-item-category">${test.type === 'automatic' ? 'تلقائي' : 'تفاعلي'}</div>
                         <div class="test-item-status" id="status-${test.id}">قيد الانتظار</div>
                         <div class="test-item-status-bar">
                             <div class="test-item-status-fill" id="progress-${test.id}" style="width: 0%"></div>
@@ -294,35 +332,39 @@ const DiagnosticEngine = {
         const totalTests = this.tests.length;
         let completedTests = 0;
 
+        // تشغيل الاختبارات التلقائية أولاً
         for (const test of this.tests) {
-            // تخطي جميع الاختبارات التفاعلية و permission-based - ستشغل يدوياً فقط
+            if (test.type === 'automatic') {
+                // تحديث حالة الاختبار
+                this.updateTestStatus(test.id, 'جاري التشغيل...');
+
+                // تشغيل الاختبار
+                const result = await this.runTest(test);
+
+                // حفظ النتيجة
+                AppState.saveTestResult(test.id, result);
+
+                // تحديث حالة الاختبار
+                this.updateTestStatus(test.id, this.getStatusText(result.status));
+                this.updateTestProgress(test.id, 100);
+
+                // تحديث التقدم الكلي
+                completedTests++;
+                this.updateOverallProgress((completedTests / totalTests) * 100);
+
+                // انتظار قصير بين الاختبارات
+                await this.sleep(500);
+            }
+        }
+
+        // الآن تمييز الاختبارات التفاعلية كـ "بانتظار البدء"
+        for (const test of this.tests) {
             if (test.type === 'interactive' || test.type === 'permission') {
                 this.updateTestStatus(test.id, 'بانتظار البدء');
                 this.updateTestProgress(test.id, 0);
                 completedTests++;
                 this.updateOverallProgress((completedTests / totalTests) * 100);
-                continue;
             }
-
-            // تحديث حالة الاختبار
-            this.updateTestStatus(test.id, 'جاري التشغيل...');
-
-            // تشغيل الاختبار
-            const result = await this.runTest(test);
-
-            // حفظ النتيجة
-            AppState.saveTestResult(test.id, result);
-
-            // تحديث حالة الاختبار
-            this.updateTestStatus(test.id, this.getStatusText(result.status));
-            this.updateTestProgress(test.id, 100);
-
-            // تحديث التقدم الكلي
-            completedTests++;
-            this.updateOverallProgress((completedTests / totalTests) * 100);
-
-            // انتظار قصير بين الاختبارات
-            await this.sleep(500);
         }
     },
 
@@ -363,8 +405,20 @@ const DiagnosticEngine = {
             return await this.testCamera();
         } else if (test.id === 'microphone') {
             return await this.testMicrophone();
+        } else if (test.id === 'speaker') {
+            return await this.testSpeaker();
+        } else if (test.id === 'network') {
+            return await this.testNetwork();
+        } else if (test.id === 'battery') {
+            return await this.testBattery();
+        } else if (test.id === 'performance') {
+            return await this.testPerformance();
+        } else if (test.id === 'storage') {
+            return await this.testStorage();
+        } else if (test.id === 'gpu') {
+            return await this.testGPU();
         }
-        
+
         return { status: 'not_available', details: 'غير متاح' };
     },
     
@@ -851,7 +905,322 @@ const DiagnosticEngine = {
             });
         });
     },
-    
+
+    // اختبار السماعات
+    testSpeaker: async function() {
+        return await this.runSpeakerTest();
+    },
+
+    // تشغيل اختبار السماعات
+    runSpeakerTest: async function() {
+        return new Promise((resolve) => {
+            // إخفاء container التفاعلي
+            const container = document.getElementById('interactiveTestContainer');
+            container.style.display = 'none';
+
+            // إنشاء overlay للسماعات
+            const overlay = document.createElement('div');
+            overlay.className = 'test-overlay speaker-test-overlay';
+            overlay.innerHTML = `
+                <div class="test-overlay-header speaker-overlay-header">
+                    <h2>فحص السماعات</h2>
+                    <p>اضغط تشغيل للاستماع إلى نغمة الاختبار.</p>
+                </div>
+                <div class="test-overlay-content" id="speakerTestContent">
+                    <div class="speaker-test-container">
+                        <button class="btn btn-primary btn-lg" id="playSpeakerBtn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 5v14l11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            تشغيل الصوت
+                        </button>
+                        <div class="speaker-status" id="speakerStatus"></div>
+                    </div>
+                </div>
+                <div class="test-overlay-actions speaker-overlay-actions" id="speakerActions" style="display: none;">
+                    <p class="speaker-question">هل سمعت الصوت بوضوح؟</p>
+                    <button class="btn btn-success btn-lg" id="speakerYesBtn">نعم، سمعت الصوت</button>
+                    <button class="btn btn-danger btn-lg" id="speakerNoBtn">لا، لم أسمع الصوت</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const playBtn = document.getElementById('playSpeakerBtn');
+            const statusEl = document.getElementById('speakerStatus');
+            const actionsEl = document.getElementById('speakerActions');
+            const yesBtn = document.getElementById('speakerYesBtn');
+            const noBtn = document.getElementById('speakerNoBtn');
+
+            let audioContext = null;
+            let oscillator = null;
+
+            playBtn.addEventListener('click', () => {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+
+                    oscillator.start();
+                    statusEl.textContent = 'جاري تشغيل اختبار الصوت...';
+                    statusEl.classList.add('status-success');
+
+                    // تشغيل لمدة 2 ثانية
+                    setTimeout(() => {
+                        oscillator.stop();
+                        oscillator = null;
+                        if (audioContext) {
+                            audioContext.close();
+                        }
+                        statusEl.textContent = 'اكتمل تشغيل الصوت';
+                        playBtn.style.display = 'none';
+                        actionsEl.style.display = 'flex';
+                    }, 2000);
+                } catch (error) {
+                    console.log('Speaker test failed:', error);
+                    statusEl.textContent = 'تعذر تشغيل الصوت. المتصفح لا يدعم Web Audio API.';
+                    statusEl.classList.add('status-error');
+                    playBtn.style.display = 'none';
+                    actionsEl.style.display = 'flex';
+                }
+            });
+
+            yesBtn.addEventListener('click', () => {
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'passed',
+                    details: 'تم تشغيل اختبار الصوت وتأكيده بواسطة المستخدم'
+                });
+            });
+
+            noBtn.addEventListener('click', () => {
+                overlay.remove();
+                container.style.display = 'block';
+                resolve({
+                    status: 'warning',
+                    details: 'تم تشغيل اختبار الصوت لكن المستخدم لم يسمعه بوضوح'
+                });
+            });
+        });
+    },
+
+    // اختبار الشبكة
+    testNetwork: async function() {
+        return await this.runNetworkTest();
+    },
+
+    // تشغيل اختبار الشبكة
+    runNetworkTest: async function() {
+        return new Promise((resolve) => {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            if (!connection) {
+                resolve({
+                    status: 'limited',
+                    details: 'Network API غير متاح في هذا المتصفح'
+                });
+                return;
+            }
+
+            const networkInfo = {
+                online: navigator.onLine,
+                type: connection.effectiveType || 'غير متاح',
+                downlink: connection.downlink ? `${connection.downlink} Mbps` : 'غير متاح',
+                rtt: connection.rtt ? `${connection.rtt} ms` : 'غير متاح',
+                saveData: connection.saveData ? 'نعم' : 'لا'
+            };
+
+            if (!navigator.onLine) {
+                resolve({
+                    status: 'warning',
+                    details: 'الجهاز غير متصل بالإنترنت حالياً',
+                    data: networkInfo
+                });
+            } else {
+                resolve({
+                    status: 'passed',
+                    details: 'الاتصال متاح - نوع: ' + networkInfo.type + ', سرعة: ' + networkInfo.downlink,
+                    data: networkInfo
+                });
+            }
+        });
+    },
+
+    // اختبار البطارية
+    testBattery: async function() {
+        return await this.runBatteryTest();
+    },
+
+    // تشغيل اختبار البطارية
+    runBatteryTest: async function() {
+        return new Promise((resolve) => {
+            if (!navigator.getBattery) {
+                resolve({
+                    status: 'limited',
+                    details: 'المتصفح لا يدعم قراءة معلومات البطارية'
+                });
+                return;
+            }
+
+            navigator.getBattery().then(battery => {
+                const level = Math.round(battery.level * 100);
+                const charging = battery.charging ? 'جاري الشحن' : 'غير مشحون';
+                const chargingTime = battery.chargingTime ? Math.round(battery.chargingTime / 60) + ' دقيقة' : 'غير متاح';
+                const dischargingTime = battery.dischargingTime ? Math.round(battery.dischargingTime / 60) + ' دقيقة' : 'غير متاح';
+
+                resolve({
+                    status: 'passed',
+                    details: `مستوى البطارية: ${level}%, الحالة: ${charging}`,
+                    data: {
+                        level: level,
+                        charging: battery.charging,
+                        chargingTime: battery.chargingTime,
+                        dischargingTime: battery.dischargingTime
+                    }
+                });
+            }).catch(error => {
+                console.log('Battery test failed:', error);
+                resolve({
+                    status: 'limited',
+                    details: 'تعذر قراءة معلومات البطارية'
+                });
+            });
+        });
+    },
+
+    // اختبار الأداء
+    testPerformance: async function() {
+        return await this.runPerformanceTest();
+    },
+
+    // تشغيل اختبار الأداء
+    runPerformanceTest: async function() {
+        return new Promise((resolve) => {
+            const startTime = performance.now();
+            
+            // اختبار العمليات الحسابية
+            let iterations = 0;
+            const maxIterations = 1000000;
+            const testDuration = 3000; // 3 ثواني
+            
+            while (performance.now() - startTime < testDuration && iterations < maxIterations) {
+                // عملية حسابية بسيطة
+                Math.sqrt(Math.random() * 1000);
+                iterations++;
+            }
+            
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            
+            // اختبار Web Worker availability
+            let workerAvailable = false;
+            try {
+                if (window.Worker) {
+                    workerAvailable = true;
+                }
+            } catch (e) {
+                workerAvailable = false;
+            }
+            
+            resolve({
+                status: 'passed',
+                details: `استغرقت ${iterations} عملية في ${duration.toFixed(2)}ms. Web Worker: ${workerAvailable ? 'متاح' : 'غير متاح'}`,
+                data: {
+                    iterations: iterations,
+                    duration: duration,
+                    workerAvailable: workerAvailable
+                }
+            });
+        });
+    },
+
+    // اختبار التخزين
+    testStorage: async function() {
+        return await this.runStorageTest();
+    },
+
+    // تشغيل اختبار التخزين
+    runStorageTest: async function() {
+        return new Promise((resolve) => {
+            if (!navigator.storage || !navigator.storage.estimate) {
+                resolve({
+                    status: 'limited',
+                    details: 'Storage API غير متاح في هذا المتصفح'
+                });
+                return;
+            }
+
+            navigator.storage.estimate().then(estimate => {
+                const usageMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+                const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(2);
+                const usagePercent = ((estimate.usage / estimate.quota) * 100).toFixed(2);
+
+                resolve({
+                    status: 'passed',
+                    details: `تم التحقق من قدرات التخزين المتاحة للمتصفح فقط. Usage: ${usageMB}MB / ${quotaMB}MB (${usagePercent}%)`,
+                    data: {
+                        usage: estimate.usage,
+                        quota: estimate.quota,
+                        usagePercent: usagePercent
+                    }
+                });
+            }).catch(error => {
+                console.log('Storage test failed:', error);
+                resolve({
+                    status: 'limited',
+                    details: 'تعذر قراءة معلومات التخزين'
+                });
+            });
+        });
+    },
+
+    // اختبار الرسوميات
+    testGPU: async function() {
+        return await this.runGPUTest();
+    },
+
+    // تشغيل اختبار الرسوميات
+    runGPUTest: async function() {
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+            if (!gl) {
+                resolve({
+                    status: 'limited',
+                    details: 'WebGL غير متاح في هذا المتصفح'
+                });
+                return;
+            }
+
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            let renderer = 'غير متاح';
+            let vendor = 'غير متاح';
+
+            if (debugInfo) {
+                renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            }
+
+            resolve({
+                status: 'passed',
+                details: `تم التحقق من قدرة المتصفح على تشغيل WebGL. Renderer: ${renderer || 'محدودة بسبب قيود الخصوصية'}`,
+                data: {
+                    webgl: true,
+                    renderer: renderer,
+                    vendor: vendor
+                }
+            });
+        });
+    },
+
     // تحديث حالة الفحص
     updateStatus: function(status) {
         const statusEl = document.getElementById('diagnosticStatus');
@@ -926,4 +1295,23 @@ const DiagnosticEngine = {
 // بدء الفحص عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     DiagnosticEngine.start();
+    
+    // إضافة event listeners للـ online/offline
+    window.addEventListener('online', () => {
+        console.log('Network connection restored');
+        const statusEl = document.getElementById('networkStatus');
+        if (statusEl) {
+            statusEl.textContent = 'متصل';
+            statusEl.classList.remove('status-offline');
+        }
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('Network connection lost');
+        const statusEl = document.getElementById('networkStatus');
+        if (statusEl) {
+            statusEl.textContent = 'غير متصل';
+            statusEl.classList.add('status-offline');
+        }
+    });
 });

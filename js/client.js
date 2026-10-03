@@ -115,6 +115,8 @@ const Client = {
         document.getElementById('passedTests').textContent = session.summary.passed;
         document.getElementById('failedTests').textContent = session.summary.failed;
         document.getElementById('warningTests').textContent = session.summary.warning;
+        document.getElementById('limitedTests').textContent = session.summary.limited;
+        document.getElementById('notAvailableTests').textContent = session.summary.notAvailable;
 
         // تحديث حالة النتيجة
         this.updateResultStatus(session);
@@ -211,28 +213,26 @@ const Client = {
     // عرض نتائج الاختبارات
     displayTestResults: function(tests) {
         const container = document.getElementById('testResultsList');
-        
+
         if (!tests || Object.keys(tests).length === 0) {
             container.innerHTML = '<p class="empty-state">لا توجد نتائج</p>';
             return;
         }
-        
+
         const testNames = {
             'screen': 'فحص الشاشة',
             'keyboard': 'فحص لوحة المفاتيح',
             'mouse': 'فحص الماوس',
-            'touchpad': 'فحص Touchpad',
             'camera': 'فحص الكاميرا',
             'microphone': 'فحص الميكروفون',
-            'speakers': 'فحص السماعات',
+            'speaker': 'فحص السماعات',
             'network': 'فحص الشبكة',
             'battery': 'فحص البطارية',
             'performance': 'فحص الأداء',
             'storage': 'فحص التخزين',
-            'graphics': 'فحص الرسوميات',
-            'system': 'معلومات النظام'
+            'gpu': 'فحص الرسوميات'
         };
-        
+
         const statusMap = {
             'passed': { class: 'badge-success', text: 'اجتاز' },
             'failed': { class: 'badge-danger', text: 'فشل' },
@@ -240,24 +240,53 @@ const Client = {
             'limited': { class: 'badge-warning', text: 'محدود' },
             'not_available': { class: 'badge-neutral', text: 'غير متاح' }
         };
-        
+
+        // تصنيف الاختبارات
+        const interactiveTests = ['screen', 'keyboard', 'mouse', 'camera', 'microphone', 'speaker'];
+        const systemTests = ['network', 'battery', 'performance', 'storage', 'gpu'];
+
         let html = '';
-        
-        for (const [testId, result] of Object.entries(tests)) {
-            const status = statusMap[result.status] || statusMap['not_available'];
-            const testName = testNames[testId] || testId;
-            
-            html += `
-                <div class="test-result-item">
-                    <div class="test-result-header">
-                        <span class="test-result-name">${testName}</span>
-                        <span class="badge ${status.class}">${status.text}</span>
+
+        // قسم الاختبارات التفاعلية
+        const interactiveResults = Object.entries(tests).filter(([id]) => interactiveTests.includes(id));
+        if (interactiveResults.length > 0) {
+            html += '<h3 class="result-section-title">الاختبارات التفاعلية</h3>';
+            interactiveResults.forEach(([testId, result]) => {
+                const status = statusMap[result.status] || statusMap['not_available'];
+                const testName = testNames[testId] || testId;
+
+                html += `
+                    <div class="test-result-item">
+                        <div class="test-result-header">
+                            <span class="test-result-name">${testName}</span>
+                            <span class="badge ${status.class}">${status.text}</span>
+                        </div>
+                        ${result.details ? `<div class="test-result-details">${result.details}</div>` : ''}
                     </div>
-                    ${result.details ? `<div class="test-result-details">${result.details}</div>` : ''}
-                </div>
-            `;
+                `;
+            });
         }
-        
+
+        // قسم اختبارات النظام
+        const systemResults = Object.entries(tests).filter(([id]) => systemTests.includes(id));
+        if (systemResults.length > 0) {
+            html += '<h3 class="result-section-title">اختبارات النظام</h3>';
+            systemResults.forEach(([testId, result]) => {
+                const status = statusMap[result.status] || statusMap['not_available'];
+                const testName = testNames[testId] || testId;
+
+                html += `
+                    <div class="test-result-item">
+                        <div class="test-result-header">
+                            <span class="test-result-name">${testName}</span>
+                            <span class="badge ${status.class}">${status.text}</span>
+                        </div>
+                        ${result.details ? `<div class="test-result-details">${result.details}</div>` : ''}
+                    </div>
+                `;
+            });
+        }
+
         container.innerHTML = html;
     }
 };

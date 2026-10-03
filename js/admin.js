@@ -284,7 +284,13 @@ const Admin = {
             'keyboard': 'فحص لوحة المفاتيح',
             'mouse': 'فحص الماوس',
             'camera': 'فحص الكاميرا',
-            'microphone': 'فحص الميكروفون'
+            'microphone': 'فحص الميكروفون',
+            'speaker': 'فحص السماعات',
+            'network': 'فحص الشبكة',
+            'battery': 'فحص البطارية',
+            'performance': 'فحص الأداء',
+            'storage': 'فحص التخزين',
+            'gpu': 'فحص الرسوميات'
         };
         
         const statusMap = {

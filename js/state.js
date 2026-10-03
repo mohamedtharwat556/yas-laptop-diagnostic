@@ -90,9 +90,9 @@ const AppState = {
     // تحديث ملخص النتائج
     updateSummary: function(result) {
         if (!this.currentSession) return;
-        
+
         const summary = this.currentSession.summary;
-        
+
         switch(result.status) {
             case 'passed':
                 summary.passed++;
@@ -109,6 +109,41 @@ const AppState = {
             case 'not_available':
                 summary.notAvailable++;
                 break;
+        }
+    },
+
+    // حفظ في localStorage
+    saveToLocalStorage: function() {
+        try {
+            localStorage.setItem('diagnosticSessions', JSON.stringify(this.recentSessions));
+            if (this.currentSession) {
+                localStorage.setItem('currentSession', JSON.stringify(this.currentSession));
+            } else {
+                localStorage.removeItem('currentSession');
+            }
+        } catch (e) {
+            console.log('Failed to save to localStorage:', e);
+        }
+    },
+
+    // تحميل من localStorage
+    loadFromLocalStorage: function() {
+        try {
+            const sessions = localStorage.getItem('diagnosticSessions');
+            const current = localStorage.getItem('currentSession');
+
+            if (sessions) {
+                this.recentSessions = JSON.parse(sessions);
+            }
+
+            if (current) {
+                this.currentSession = JSON.parse(current);
+            }
+        } catch (e) {
+            console.log('Failed to load from localStorage:', e);
+            // In case of corruption, clear the data
+            this.recentSessions = [];
+            this.currentSession = null;
         }
     },
     

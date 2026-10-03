@@ -192,6 +192,14 @@
     margin-bottom: var(--spacing-1);
 }
 
+.test-item-category {
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-500);
+    margin-bottom: var(--spacing-1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .test-item-status {
     font-size: var(--font-size-sm);
     color: var(--color-neutral-500);
@@ -225,6 +233,21 @@
     padding: var(--spacing-6);
     margin-bottom: var(--spacing-6);
     box-shadow: var(--shadow-sm);
+}
+
+.network-status {
+    margin-top: var(--spacing-4);
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-600);
+    text-align: center;
+}
+
+.network-status .status-text {
+    font-weight: var(--font-weight-medium);
+}
+
+.network-status.status-offline .status-text {
+    color: var(--color-danger);
 }
 
 .progress-label {
@@ -895,6 +918,41 @@
 #micTestContent {
     width: 100%;
     max-width: 600px;
+}
+
+/* Speaker Test */
+.speaker-test-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-6);
+}
+
+.speaker-status {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-3) var(--spacing-4);
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-100);
+    text-align: center;
+}
+
+.speaker-status.status-success {
+    color: var(--color-success);
+    background-color: #d4edda;
+}
+
+.speaker-status.status-error {
+    color: var(--color-danger);
+    background-color: #f8d7da;
+}
+
+.speaker-question {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-neutral-100);
+    text-align: center;
+    margin-bottom: var(--spacing-4);
 }
 
 /* Responsive Client */
