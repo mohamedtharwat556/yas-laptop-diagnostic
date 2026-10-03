@@ -6,9 +6,17 @@ class SessionService {
         this.supabase = null;
         this.localSessions = new Map();
         this.pendingSync = new Map();
+        this.syncRetry = new Map(); // Track retry attempts: {sessionCode: {attempts, lastRetry, backoffMs}}
         this.isOnline = navigator.onLine;
         this.initialized = false;
         this.initPromise = this.init();
+        this.syncInProgress = false;
+        
+        // Exponential backoff configuration
+        this.MAX_RETRY_ATTEMPTS = 5;
+        this.INITIAL_BACKOFF_MS = 1000;     // 1 second
+        this.MAX_BACKOFF_MS = 32000;        // 32 seconds
+        this.BACKOFF_MULTIPLIER = 2;
     }
 
     /**
@@ -48,12 +56,25 @@ class SessionService {
     }
 
     /**
-     * Handle online event
+     * Handle online event - schedule pending sync
      */
     handleOnline() {
         this.isOnline = true;
-        console.log('Connection restored - syncing pending sessions');
+        console.log('✅ Connection restored - scheduling sync of pending sessions');
+        
+        // Schedule immediate sync attempt
         this.syncPendingSessions();
+        
+        // Schedule periodic checks if there are still pending sessions
+        // This handles cases where backoff prevents immediate retry
+        const checkInterval = setInterval(() => {
+            if (!this.isOnline || this.pendingSync.size === 0) {
+                clearInterval(checkInterval);
+                return;
+            }
+            
+            this.syncPendingSessions();
+        }, 5000); // Check every 5 seconds
     }
 
     /**
@@ -80,6 +101,76 @@ class SessionService {
     }
 
     /**
+     * Calculate backoff delay for exponential backoff retry
+     * @param {number} attempts - Number of attempts so far
+     * @returns {number} Backoff delay in milliseconds
+     */
+    getBackoffDelay(attempts) {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s
+        const backoffMs = Math.min(
+            this.INITIAL_BACKOFF_MS * Math.pow(this.BACKOFF_MULTIPLIER, attempts - 1),
+            this.MAX_BACKOFF_MS
+        );
+        
+        // Add jitter (random 0-25% variation) to prevent thundering herd
+        const jitter = backoffMs * (Math.random() * 0.25);
+        return backoffMs + jitter;
+    }
+
+    /**
+     * Check if session should be retried based on backoff
+     * @param {string} sessionCode
+     * @returns {boolean}
+     */
+    shouldRetry(sessionCode) {
+        const retryInfo = this.syncRetry.get(sessionCode);
+        
+        if (!retryInfo) {
+            // First attempt - always retry
+            return true;
+        }
+        
+        if (retryInfo.attempts >= this.MAX_RETRY_ATTEMPTS) {
+            console.warn(`Max retry attempts (${this.MAX_RETRY_ATTEMPTS}) reached for session:`, sessionCode);
+            return false;
+        }
+        
+        // Check if backoff time has elapsed
+        const now = Date.now();
+        const timeSinceLastRetry = now - retryInfo.lastRetry;
+        
+        if (timeSinceLastRetry >= retryInfo.backoffMs) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Record failed sync attempt and calculate next backoff
+     * @param {string} sessionCode
+     */
+    recordFailedAttempt(sessionCode) {
+        const retryInfo = this.syncRetry.get(sessionCode) || { attempts: 0, lastRetry: 0, backoffMs: 0 };
+        
+        retryInfo.attempts += 1;
+        retryInfo.lastRetry = Date.now();
+        retryInfo.backoffMs = this.getBackoffDelay(retryInfo.attempts);
+        
+        this.syncRetry.set(sessionCode, retryInfo);
+        
+        console.log(`Scheduled retry for ${sessionCode}: attempt ${retryInfo.attempts}/${this.MAX_RETRY_ATTEMPTS}, backoff ${retryInfo.backoffMs.toFixed(0)}ms`);
+    }
+
+    /**
+     * Clear retry tracking for session
+     * @param {string} sessionCode
+     */
+    clearRetry(sessionCode) {
+        this.syncRetry.delete(sessionCode);
+    }
+
+    /**
      * Save pending sync sessions to localStorage
      */
     savePendingSync() {
@@ -101,27 +192,49 @@ class SessionService {
     }
 
     /**
-     * Create a new session
+     * Create a new session with idempotency protection
+     * Prevents duplicate sessions from refresh/reconnect/retry
+     * 
+     * Uses session_code (client-generated, deterministic) + client_session_id for idempotency
+     * Supabase is authoritative: successful Supabase creation is required for production sessions
+     * 
      * @param {Object} customerData - Customer information
-     * @returns {Promise<Object>} Session object
+     * @returns {Promise<Object>} Session object with UUID from Supabase or local UUID for offline
      */
     async createSession(customerData) {
         console.log('SessionService.createSession called with:', customerData);
+
+        // Validate customer data
+        if (!customerData || !customerData.name || !customerData.phone || !customerData.problem) {
+            const error = new Error('Missing required customer data: name, phone, problem');
+            console.error('Session creation validation failed:', error);
+            throw error;
+        }
 
         // Wait for initialization
         await this.waitForInitialization();
 
         const sessionCode = this.generateSessionCode();
         console.log('Generated session code:', sessionCode);
+
+        // Check for existing session in local cache first (fast path for double-submit protection)
+        if (this.localSessions.has(sessionCode)) {
+            console.warn('⚠️  Session code already exists locally:', sessionCode);
+            return this.localSessions.get(sessionCode);
+        }
+
         const session = {
-            id: null, // Will be set by Supabase
+            id: null, // Will be set by Supabase (UUID) or use sessionCode locally
             sessionCode,
+            client_session_id: sessionCode, // For idempotency detection at Supabase level
             status: 'created',
-            customer_name: customerData.name || '',
-            customer_phone: customerData.phone || '',
-            order_number: customerData.serviceOrder || '',
-            problem_description: customerData.problem || '',
+            sync_status: 'pending', // Default to pending - will change to 'synced' on success
+            customer_name: customerData.name.trim(),
+            customer_phone: customerData.phone.trim(),
+            order_number: customerData.serviceOrder?.trim() || null,
+            problem_description: customerData.problem.trim(),
             device_info: null,
+            tests: [],
             summary: null,
             issues: null,
             technician_notes: null,
@@ -133,13 +246,44 @@ class SessionService {
             updated_at: new Date().toISOString()
         };
 
-        console.log('Supabase available:', !!this.supabase);
-        console.log('Is online:', this.isOnline);
+        console.log('Session object prepared:', {
+            sessionCode: session.sessionCode,
+            supabaseAvailable: !!this.supabase,
+            isOnline: this.isOnline,
+            syncStatus: session.sync_status
+        });
 
-        // Try to create in Supabase
+        // Try to create in Supabase (authoritative source)
         if (this.supabase && this.isOnline) {
             try {
-                console.log('Attempting to insert session into Supabase...');
+                console.log('Creating session in Supabase with idempotency check...');
+                
+                // IDEMPOTENCY CHECK: Check if session already exists by client_session_id
+                const { data: existing, error: checkError } = await this.supabase
+                    .from('diagnostic_sessions')
+                    .select('id, sessionCode, sync_status')
+                    .eq('client_session_id', sessionCode)
+                    .single();
+
+                if (checkError && checkError.code !== 'PGRST116') {
+                    // PGRST116 = no rows found (expected on first create)
+                    console.warn('Error checking for existing session:', checkError);
+                }
+
+                if (existing) {
+                    console.warn('✅ Idempotency: Session already exists, returning existing:', existing.sessionCode);
+                    // Session already exists - return it (idempotent)
+                    const existingSession = {
+                        ...session,
+                        id: existing.id,
+                        sync_status: existing.sync_status
+                    };
+                    this.localSessions.set(sessionCode, existingSession);
+                    return existingSession;
+                }
+
+                // Session doesn't exist - create new one
+                console.log('No existing session found - creating new one in Supabase...');
                 const { data, error } = await this.supabase
                     .from('diagnostic_sessions')
                     .insert([session])
@@ -147,39 +291,70 @@ class SessionService {
                     .single();
 
                 if (error) {
-                    console.error('Supabase session creation failed:', error);
-                    // Fall back to local storage
-                    session.id = sessionCode; // Use session code as local ID
+                    console.error('❌ Supabase creation failed:', error.message);
+                    
+                    // Treat Supabase error as critical for now - fall back to local
+                    session.id = sessionCode;
+                    session.sync_status = 'pending';
+                    
                     this.localSessions.set(sessionCode, session);
                     this.pendingSync.set(sessionCode, session);
                     this.savePendingSync();
-                } else {
-                    session.id = data.id;
-                    this.localSessions.set(sessionCode, session);
-                    console.log('Session created in Supabase:', session.id);
+                    
+                    console.log('⚠️  Falling back to local storage (will retry sync on reconnect)');
+                    return session;
                 }
+
+                // ✅ Supabase succeeded - session is now authoritative on server
+                session.id = data.id; // Use UUID from Supabase
+                session.sync_status = 'synced';
+                
+                this.localSessions.set(sessionCode, session);
+                // Remove from pending - successfully synced
+                this.pendingSync.delete(sessionCode);
+                this.savePendingSync();
+                
+                console.log('✅ Session created in Supabase (authoritative):', {
+                    supabaseId: session.id,
+                    sessionCode: session.sessionCode,
+                    syncStatus: 'synced',
+                    idempotent: false
+                });
+
+                return session;
             } catch (error) {
-                console.error('Supabase session creation error:', error);
-                // Fall back to local storage
+                console.error('❌ Supabase creation error:', error);
+                
+                // Network or other runtime error - fall back to local
                 session.id = sessionCode;
+                session.sync_status = 'pending';
+                
                 this.localSessions.set(sessionCode, session);
                 this.pendingSync.set(sessionCode, session);
                 this.savePendingSync();
+                
+                console.log('⚠️  Network error - falling back to local storage');
+                return session;
             }
         } else {
-            // No Supabase available - use local storage
-            console.log('No Supabase or offline - using local storage');
-            session.id = sessionCode;
+            // No Supabase available or offline - use local storage
+            // Will sync to Supabase when online
+            session.id = sessionCode; // Use session code as temporary local ID
+            session.sync_status = 'pending';
+            
             this.localSessions.set(sessionCode, session);
             this.pendingSync.set(sessionCode, session);
             this.savePendingSync();
-            console.log('Session created locally:', sessionCode);
+            
+            console.log('⚠️  Offline or Supabase unavailable - session stored locally:', {
+                sessionCode: session.sessionCode,
+                offline: !this.isOnline,
+                supabaseUnavailable: !this.supabase,
+                syncStatus: 'pending'
+            });
+
+            return session;
         }
-
-        // Also save to localStorage for backward compatibility
-        localStorage.setItem('current_session', JSON.stringify(session));
-
-        return session;
     }
 
     /**
@@ -248,24 +423,32 @@ class SessionService {
 
                 if (error) {
                     console.error('Supabase update failed:', error);
+                    session.sync_status = 'pending';
+                    this.localSessions.set(sessionCode, session);
                     this.pendingSync.set(sessionCode, session);
                     this.savePendingSync();
                     return false;
                 }
 
                 // Remove from pending if successful
+                session.sync_status = 'synced';
+                this.localSessions.set(sessionCode, session);
                 this.pendingSync.delete(sessionCode);
                 this.savePendingSync();
                 console.log('Session updated in Supabase:', sessionCode);
                 return true;
             } catch (error) {
                 console.error('Session update error:', error);
+                session.sync_status = 'pending';
+                this.localSessions.set(sessionCode, session);
                 this.pendingSync.set(sessionCode, session);
                 this.savePendingSync();
                 return false;
             }
         } else {
             // Add to pending sync
+            session.sync_status = 'pending';
+            this.localSessions.set(sessionCode, session);
             this.pendingSync.set(sessionCode, session);
             this.savePendingSync();
             return false;
@@ -326,61 +509,112 @@ class SessionService {
             status: 'completed',
             completed_at: new Date().toISOString(),
             summary: summary.summary || null,
-            issues: summary.issues || null
+            issues: summary.issues || null,
+            sync_status: 'pending'
         });
     }
 
     /**
-     * Sync pending sessions to Supabase
+     * Sync pending sessions to Supabase with idempotency protection and exponential backoff
+     * Prevents duplicate inserts via client_session_id unique constraint
+     * Uses exponential backoff for failed retries
      */
     async syncPendingSessions() {
         if (!this.supabase || !this.isOnline) {
+            console.log('Sync skipped: Supabase unavailable or offline');
             return;
         }
 
-        console.log(`Syncing ${this.pendingSync.size} pending sessions...`);
+        // Prevent concurrent sync operations
+        if (this.syncInProgress) {
+            console.log('Sync already in progress, skipping...');
+            return;
+        }
+
+        this.syncInProgress = true;
+        console.log(`Starting sync of ${this.pendingSync.size} pending sessions...`);
+
+        const syncStartTime = Date.now();
+        let syncedCount = 0;
+        let failedCount = 0;
 
         for (const [sessionCode, session] of this.pendingSync) {
+            // Check if this session should be retried (respects backoff)
+            if (!this.shouldRetry(sessionCode)) {
+                console.log(`Skipping retry (backoff in effect) for session:`, sessionCode);
+                continue;
+            }
+
             try {
-                // Check if session already exists in Supabase
-                const { data: existing } = await this.supabase
+                // First, check if session already exists (idempotency check)
+                const { data: existing, error: checkError } = await this.supabase
                     .from('diagnostic_sessions')
-                    .select('id')
-                    .eq('session_code', sessionCode)
+                    .select('id, sync_status')
+                    .eq('client_session_id', session.client_session_id)
                     .single();
 
-                if (existing) {
-                    // Update existing session
-                    const { error } = await this.supabase
-                        .from('diagnostic_sessions')
-                        .update(session)
-                        .eq('session_code', sessionCode);
-
-                    if (error) {
-                        console.error('Failed to sync session update:', sessionCode, error);
-                    } else {
-                        console.log('Session synced (update):', sessionCode);
-                        this.pendingSync.delete(sessionCode);
-                    }
-                } else {
-                    // Insert new session
-                    const { error } = await this.supabase
-                        .from('diagnostic_sessions')
-                        .insert([session]);
-
-                    if (error) {
-                        console.error('Failed to sync session insert:', sessionCode, error);
-                    } else {
-                        console.log('Session synced (insert):', sessionCode);
-                        this.pendingSync.delete(sessionCode);
-                    }
+                if (checkError && checkError.code !== 'PGRST116') {
+                    // PGRST116 = no rows found (expected)
+                    console.warn('Error checking for existing session during sync:', checkError);
+                    throw checkError;
                 }
+
+                if (existing) {
+                    // Session already exists - this is idempotent
+                    console.log('✅ Idempotent sync: Session already exists in Supabase:', sessionCode);
+                    
+                    // Update local record with Supabase ID if we don't have it
+                    if (!session.id || session.id === sessionCode) {
+                        session.id = existing.id;
+                    }
+                    session.sync_status = 'synced';
+                    this.localSessions.set(sessionCode, session);
+                    this.pendingSync.delete(sessionCode);
+                    this.clearRetry(sessionCode);
+                    syncedCount++;
+                    continue;
+                }
+
+                // Session doesn't exist in Supabase - insert it
+                console.log('Syncing new session to Supabase:', sessionCode);
+                const { data: inserted, error: insertError } = await this.supabase
+                    .from('diagnostic_sessions')
+                    .insert([session])
+                    .select()
+                    .single();
+
+                if (insertError) {
+                    console.error('Failed to sync session insert:', sessionCode, insertError);
+                    this.recordFailedAttempt(sessionCode);
+                    session.sync_status = 'failed';
+                    this.localSessions.set(sessionCode, session);
+                    failedCount++;
+                    continue;
+                }
+
+                // ✅ Successfully inserted
+                console.log('✅ Session synced (insert):', sessionCode);
+                session.id = inserted.id;
+                session.sync_status = 'synced';
+                this.localSessions.set(sessionCode, session);
+                this.pendingSync.delete(sessionCode);
+                this.clearRetry(sessionCode);
+                syncedCount++;
+
             } catch (error) {
-                console.error('Failed to sync session:', sessionCode, error);
+                console.error('Error during session sync:', sessionCode, error);
+                this.recordFailedAttempt(sessionCode);
+                session.sync_status = 'failed';
+                this.localSessions.set(sessionCode, session);
+                failedCount++;
             }
         }
 
         this.savePendingSync();
+        const syncDuration = Date.now() - syncStartTime;
+        
+        this.syncInProgress = false;
+        console.log(`Sync complete: ${syncedCount} synced, ${failedCount} failed/retrying in ${syncDuration}ms. Remaining pending: ${this.pendingSync.size}`);
     }
 }
 

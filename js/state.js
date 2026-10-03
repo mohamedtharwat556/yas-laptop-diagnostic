@@ -20,6 +20,17 @@ const TestStatus = {
     CANCELLED: 'cancelled'
 };
 
+// Session statuses - MUST match Supabase schema
+const SessionStatus = {
+    CREATED: 'created',
+    RUNNING: 'running',
+    PARTIALLY_COMPLETED: 'partially_completed',
+    COMPLETED: 'completed',
+    COMPLETED_WITH_WARNINGS: 'completed_with_warnings',
+    COMPLETED_WITH_FAILURES: 'completed_with_failures',
+    COMPLETED_WITH_LIMITATIONS: 'completed_with_limitations'
+};
+
 // Severity levels for issues
 const IssueSeverity = {
     INFO: 'info',
@@ -49,33 +60,63 @@ const AppState = {
         // في المستقبل سيتم جلب هذه البيانات من قاعدة البيانات
         // حالياً نستخدم بيانات تجريبية
         this.stats.totalDevices = this.recentSessions.length;
-        this.stats.activeSessions = this.recentSessions.filter(s => s.status === 'active').length;
-        this.stats.completedSessions = this.recentSessions.filter(s => s.status === 'completed').length;
-        this.stats.needsReview = this.recentSessions.filter(s => s.status === 'needs_review').length;
+        this.stats.activeSessions = this.recentSessions.filter(s => 
+            s.status === SessionStatus.CREATED || s.status === SessionStatus.RUNNING
+        ).length;
+        this.stats.completedSessions = this.recentSessions.filter(s => 
+            s.status && s.status.startsWith('completed')
+        ).length;
+        this.stats.needsReview = this.recentSessions.filter(s => 
+            s.status === SessionStatus.COMPLETED_WITH_FAILURES || 
+            s.status === SessionStatus.COMPLETED_WITH_WARNINGS
+        ).length;
     },
     
     // إضافة جلسة فحص جديدة
+    // Ensures Supabase is authoritative for all production sessions
     addSession: async function(sessionData) {
-        console.log('addSession called with data:', sessionData);
-        console.log('window.sessionService available:', !!window.sessionService);
+        console.log('AppState.addSession called with:', sessionData);
+        console.log('SessionService available:', !!window.sessionService);
 
-        // Try to create session in Supabase via sessionService
+        // Validate input data
+        if (!sessionData.customerName?.trim() || !sessionData.customerPhone?.trim() || !sessionData.problemDescription?.trim()) {
+            const error = new Error('Invalid session data: missing required fields');
+            console.error('Session creation failed:', error);
+            throw error;
+        }
+
         let supabaseSession = null;
+        let creationError = null;
+
+        // Try to create session via SessionService (which handles Supabase + fallback)
         if (window.sessionService) {
             try {
                 console.log('Calling SessionService.createSession...');
-                supabaseSession = await window.sessionService.createSession(sessionData);
-                console.log('Supabase session created:', supabaseSession);
+                supabaseSession = await window.sessionService.createSession({
+                    name: sessionData.customerName,
+                    phone: sessionData.customerPhone,
+                    serviceOrder: sessionData.serviceOrder,
+                    problem: sessionData.problemDescription
+                });
+                console.log('Session created by SessionService:', {
+                    sessionCode: supabaseSession?.sessionCode,
+                    supabaseId: supabaseSession?.id,
+                    syncStatus: supabaseSession?.sync_status
+                });
             } catch (error) {
-                console.error('Supabase session creation failed, using local fallback:', error);
+                creationError = error;
+                console.error('SessionService.createSession failed:', error);
             }
         } else {
-            console.log('SessionService not available, using local-only mode');
+            console.log('SessionService not available - local mode only');
         }
 
+        // Create AppState session
         const session = {
             sessionId: supabaseSession?.id || Date.now().toString(),
             sessionCode: supabaseSession?.sessionCode || null,
+            supabaseId: supabaseSession?.id || null,
+            syncStatus: supabaseSession?.sync_status || 'pending', // Track sync state
             customer: {
                 name: sessionData.customerName,
                 phone: sessionData.customerPhone,
@@ -91,19 +132,26 @@ const AppState = {
                 limited: 0,
                 notAvailable: 0
             },
-            status: 'active',
+            status: SessionStatus.RUNNING,
             startedAt: new Date().toISOString(),
             completedAt: null,
             technicianNotes: [],
-            supabaseId: supabaseSession?.id || null
+            createdAt: new Date().toISOString()
         };
 
         this.recentSessions.unshift(session);
         this.currentSession = session;
         this.updateStats();
 
-        // حفظ في localStorage للاستخدام بين الصفحات
+        // Save to localStorage for persistence
         this.saveToLocalStorage();
+
+        console.log('Session added to AppState:', {
+            sessionCode: session.sessionCode,
+            status: session.status,
+            syncStatus: session.syncStatus,
+            isOnline: navigator.onLine
+        });
 
         return session;
     },
@@ -285,10 +333,34 @@ const AppState = {
     // إتمام جلسة الفحص الحالية
     completeCurrentSession: function() {
         if (this.currentSession) {
-            this.updateSessionStatus(this.currentSession.sessionId, 'completed');
-            this.currentSession = null;
-            this.testResults = {};
+            const summary = this.currentSession.summary;
+            
+            // Determine final status based on test results
+            if (summary.failed > 0) {
+                this.currentSession.status = SessionStatus.COMPLETED_WITH_FAILURES;
+            } else if (summary.warning > 0) {
+                this.currentSession.status = SessionStatus.COMPLETED_WITH_WARNINGS;
+            } else if (summary.limited > 0 || summary.notAvailable > 0) {
+                this.currentSession.status = SessionStatus.COMPLETED_WITH_LIMITATIONS;
+            } else if (summary.passed > 0) {
+                this.currentSession.status = SessionStatus.COMPLETED;
+            } else {
+                this.currentSession.status = SessionStatus.PARTIALLY_COMPLETED;
+            }
+            
+            this.currentSession.completedAt = new Date().toISOString();
+            this.updateStats();
             this.saveToLocalStorage();
+
+            // Sync to Supabase if available
+            if (window.sessionService && this.currentSession.sessionCode) {
+                window.sessionService.completeSession(this.currentSession.sessionCode, {
+                    summary: this.currentSession.summary,
+                    issues: DiagnosticSummaryEngine.extractIssues(this.currentSession)
+                }).catch(error => {
+                    console.error('Failed to sync session completion to Supabase:', error);
+                });
+            }
         }
     },
     

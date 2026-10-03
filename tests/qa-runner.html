@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAS Diagnostic - QA Test Runner (Batch 6B-2a)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-online {
+            background: #2ecc71;
+        }
+
+        .status-offline {
+            background: #e74c3c;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        .test-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ecf0f1;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+
+        .test-item.pass {
+            border-left-color: #2ecc71;
+            background: #f0fdf4;
+        }
+
+        .test-item.fail {
+            border-left-color: #e74c3c;
+            background: #fef2f2;
+        }
+
+        .test-item.error {
+            border-left-color: #e67e22;
+            background: #fffbf0;
+        }
+
+        .test-item.pending {
+            border-left-color: #f39c12;
+            background: #fffef5;
+        }
+
+        .test-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .test-icon {
+            font-size: 18px;
+            min-width: 20px;
+        }
+
+        .test-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .test-message {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+
+        .test-details {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            padding: 8px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 3px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .report {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .report h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .report-stat {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .report-stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .report-stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            transition: width 0.3s ease;
+        }
+
+        .console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .console-log {
+            margin-bottom: 8px;
+        }
+
+        .console-log.info {
+            color: #6a9fb5;
+        }
+
+        .console-log.success {
+            color: #6a9fb5;
+        }
+
+        .console-log.warn {
+            color: #dcdcaa;
+        }
+
+        .console-log.error {
+            color: #f48771;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🧪 YAS Diagnostic QA Test Suite</h1>
+            <p class="subtitle">Batch 6B-2a-FINALIZE: Production Session + Supabase Security Foundation</p>
+            
+            <div class="controls">
+                <button class="btn-primary" id="runTestsBtn" onclick="runAllTests()">
+                    🚀 Run All Tests
+                </button>
+                <button class="btn-secondary" id="clearBtn" onclick="clearResults()">
+                    🗑️ Clear Results
+                </button>
+                <button class="btn-danger" id="consoleToggleBtn" onclick="toggleConsole()">
+                    📝 Toggle Console
+                </button>
+            </div>
+
+            <div class="status">
+                <div class="status-item">
+                    <div class="status-dot" id="onlineIndicator"></div>
+                    <span id="onlineStatus">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span id="supabaseStatus">Supabase: Checking...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Test Results Section -->
+        <div class="section">
+            <h2>📋 Test Results</h2>
+            <div id="testResults" class="loading">
+                <p>Click "Run All Tests" to start</p>
+            </div>
+        </div>
+
+        <!-- Report Section -->
+        <div class="section hidden" id="reportSection">
+            <h2>📊 Test Report</h2>
+            <div class="report">
+                <h3>Summary</h3>
+                <div class="report-grid">
+                    <div class="report-stat">
+                        <div class="report-stat-value" id="passCount">0</div>
+                        <div class="report-stat-label">✅ Passed</div>
+                    </div>
+                    <div class="report-stat">
+                        <div class="report-stat-value" id="failCount">0</div>
+                        <div class="report-stat-label">❌ Failed</div>
+                    </div>
+                    <div class="report-stat">
+                        <div class="report-stat-value" id="errorCount">0</div>
+                        <div class="report-stat-label">🔴 Errors</div>
+                    </div>
+                    <div class="report-stat">
+                        <div class="report-stat-value" id="totalCount">0</div>
+                        <div class="report-stat-label">Total Tests</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console -->
+        <div id="consoleContainer" class="console hidden"></div>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="../css/style.css"></script>
+    <script src="../js/supabaseConfig.js"></script>
+    <script src="../js/supabaseClient.js"></script>
+    <script src="../js/sessionService.js"></script>
+    <script src="../js/state.js"></script>
+    <script src="qa-batch-6b-2a.test.js"></script>
+
+    <script>
+        // Capture console logs
+        const consoleContainer = document.getElementById('consoleContainer');
+        const consoleLogs = [];
+
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        console.log = function(...args) {
+            originalLog(...args);
+            addConsoleLog('info', args.join(' '));
+        };
+
+        console.warn = function(...args) {
+            originalWarn(...args);
+            addConsoleLog('warn', args.join(' '));
+        };
+
+        console.error = function(...args) {
+            originalError(...args);
+            addConsoleLog('error', args.join(' '));
+        };
+
+        function addConsoleLog(level, message) {
+            consoleLogs.push({ level, message, time: new Date().toLocaleTimeString() });
+            updateConsoleDisplay();
+        }
+
+        function updateConsoleDisplay() {
+            const lines = consoleLogs.slice(-100).map(log => 
+                `<div class="console-log ${log.level}">[${log.time}] ${log.message}</div>`
+            );
+            consoleContainer.innerHTML = lines.join('');
+            consoleContainer.scrollTop = consoleContainer.scrollHeight;
+        }
+
+        function toggleConsole() {
+            consoleContainer.classList.toggle('hidden');
+        }
+
+        // Update online status
+        function updateStatus() {
+            const onlineIndicator = document.getElementById('onlineIndicator');
+            const onlineStatus = document.getElementById('onlineStatus');
+            
+            if (navigator.onLine) {
+                onlineIndicator.className = 'status-dot status-online';
+                onlineStatus.textContent = 'Online';
+            } else {
+                onlineIndicator.className = 'status-dot status-offline';
+                onlineStatus.textContent = 'Offline';
+            }
+
+            // Check Supabase
+            const supabaseStatus = document.getElementById('supabaseStatus');
+            if (window.SUPABASE_CONFIG_LOADED !== false) {
+                supabaseStatus.textContent = 'Supabase: Configured ✅';
+            } else {
+                supabaseStatus.textContent = 'Supabase: Using LocalStorage';
+            }
+        }
+
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+        updateStatus();
+
+        // Run tests
+        async function runAllTests() {
+            const btn = document.getElementById('runTestsBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Running tests...';
+
+            const testResults = document.getElementById('testResults');
+            testResults.innerHTML = '<div class="loading"><div class="spinner"></div><p>Running tests...</p></div>';
+
+            try {
+                const summary = await runQATests();
+                displayResults(summary);
+                btn.textContent = '🚀 Run All Tests';
+                btn.disabled = false;
+            } catch (error) {
+                console.error('Test runner error:', error);
+                testResults.innerHTML = `<div class="test-item error"><strong>Test Runner Error</strong>: ${error.message}</div>`;
+                btn.textContent = '🚀 Run All Tests';
+                btn.disabled = false;
+            }
+        }
+
+        function displayResults(summary) {
+            const testResults = document.getElementById('testResults');
+            let html = '';
+
+            // Display individual test results
+            TestResults.passed.forEach(test => {
+                html += `
+                    <div class="test-item pass">
+                        <div class="test-header">
+                            <span class="test-icon">✅</span>
+                            <span class="test-name">Test ${test.testId}</span>
+                        </div>
+                        <div class="test-message">${test.message}</div>
+                    </div>
+                `;
+            });
+
+            TestResults.failed.forEach(test => {
+                html += `
+                    <div class="test-item fail">
+                        <div class="test-header">
+                            <span class="test-icon">❌</span>
+                            <span class="test-name">Test ${test.testId}</span>
+                        </div>
+                        <div class="test-message">${test.message}</div>
+                        <div class="test-details">
+                            Expected: ${test.expected}<br>
+                            Actual: ${test.actual}
+                        </div>
+                    </div>
+                `;
+            });
+
+            TestResults.errors.forEach(test => {
+                html += `
+                    <div class="test-item error">
+                        <div class="test-header">
+                            <span class="test-icon">🔴</span>
+                            <span class="test-name">Test ${test.testId}</span>
+                        </div>
+                        <div class="test-message">${test.message}</div>
+                        <div class="test-details">${test.error}</div>
+                    </div>
+                `;
+            });
+
+            testResults.innerHTML = html;
+
+            // Update report
+            document.getElementById('passCount').textContent = summary.passed;
+            document.getElementById('failCount').textContent = summary.failed;
+            document.getElementById('errorCount').textContent = summary.errors;
+            document.getElementById('totalCount').textContent = summary.total;
+            
+            const passRate = Math.round(summary.passRate);
+            document.getElementById('progressFill').style.width = passRate + '%';
+            document.getElementById('progressFill').textContent = passRate + '%';
+
+            document.getElementById('reportSection').classList.remove('hidden');
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '<p>Click "Run All Tests" to start</p>';
+            document.getElementById('reportSection').classList.add('hidden');
+            consoleLogs.length = 0;
+            consoleContainer.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

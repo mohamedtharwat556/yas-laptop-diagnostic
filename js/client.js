@@ -48,12 +48,41 @@ const Client = {
                         problemDescription: formData.get('problemDescription')
                     };
 
-                    console.log('Calling AppState.addSession with:', sessionData);
-                    // إضافة جلسة جديدة (async for Supabase)
-                    await AppState.addSession(sessionData);
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn.innerHTML;
 
-                    // الانتقال إلى صفحة الفحص
-                    window.location.href = 'diagnostic.html';
+                    try {
+                        // Disable button and show loading state
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = 'جاري إنشاء جلسة الفحص...';
+
+                        console.log('Creating session with data:', sessionData);
+                        // إضافة جلسة جديدة (with Supabase fallback)
+                        const session = await AppState.addSession(sessionData);
+
+                        // Verify session was created
+                        if (!session || !session.sessionCode) {
+                            console.error('Session creation returned invalid session:', session);
+                            alert('تعذر إنشاء جلسة الفحص. يرجى المحاولة مرة أخرى.');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                            return;
+                        }
+
+                        console.log('✅ Session created successfully:', {
+                            sessionCode: session.sessionCode,
+                            syncStatus: session.syncStatus,
+                            online: navigator.onLine
+                        });
+
+                        // الانتقال إلى صفحة الفحص
+                        window.location.href = 'diagnostic.html';
+                    } catch (error) {
+                        console.error('Session creation failed:', error);
+                        alert(`تعذر إنشاء جلسة الفحص: ${error.message}`);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
                 } else {
                     console.log('Form validation failed');
                 }
