@@ -109,12 +109,30 @@
     .admin-login-box {
         padding: var(--spacing-6);
     }
-    
+
     .admin-login-title {
         font-size: var(--font-size-xl);
     }
-    
+
     .info-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Test Results in Admin */
+.test-result-details {
+    margin-top: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-600);
+}
+
+.test-result-data {
+    margin-top: var(--spacing-2);
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-500);
+    background-color: var(--color-neutral-100);
+    padding: var(--spacing-2);
+    border-radius: var(--radius-sm);
+    white-space: pre-wrap;
+    word-break: break-all;
 }

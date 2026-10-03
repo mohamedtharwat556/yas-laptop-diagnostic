@@ -273,12 +273,12 @@ const Admin = {
     // عرض نتائج الاختبارات
     displayTestResults: function(tests) {
         const container = document.getElementById('detailTestResults');
-        
+
         if (!tests || Object.keys(tests).length === 0) {
             container.innerHTML = '<p class="empty-state">لا توجد نتائج</p>';
             return;
         }
-        
+
         const testNames = {
             'screen': 'فحص الشاشة',
             'keyboard': 'فحص لوحة المفاتيح',
@@ -292,7 +292,7 @@ const Admin = {
             'storage': 'فحص التخزين',
             'gpu': 'فحص الرسوميات'
         };
-        
+
         const statusMap = {
             'passed': { class: 'badge-success', text: 'اجتاز' },
             'failed': { class: 'badge-danger', text: 'فشل' },
@@ -300,13 +300,13 @@ const Admin = {
             'limited': { class: 'badge-warning', text: 'محدود' },
             'not_available': { class: 'badge-neutral', text: 'غير متاح' }
         };
-        
+
         let html = '<div class="test-results-list">';
-        
+
         for (const [testId, result] of Object.entries(tests)) {
             const status = statusMap[result.status] || statusMap['not_available'];
             const testName = testNames[testId] || testId;
-            
+
             html += `
                 <div class="test-result-item">
                     <div class="test-result-header">
@@ -314,10 +314,11 @@ const Admin = {
                         <span class="badge ${status.class}">${status.text}</span>
                     </div>
                     ${result.details ? `<div class="test-result-details">${result.details}</div>` : ''}
+                    ${result.data ? `<div class="test-result-data">${JSON.stringify(result.data, null, 2)}</div>` : ''}
                 </div>
             `;
         }
-        
+
         html += '</div>';
         container.innerHTML = html;
     }
