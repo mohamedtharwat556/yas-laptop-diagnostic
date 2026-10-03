@@ -197,6 +197,15 @@ const Client = {
                 </div>
             `;
         }
+
+        if (deviceInfo.cpu && deviceInfo.cpu.model) {
+            html += `
+                <div class="device-info-detail-item">
+                    <div class="device-info-detail-label">نوع المعالج</div>
+                    <div class="device-info-detail-value">${deviceInfo.cpu.model}</div>
+                </div>
+            `;
+        }
         
         if (deviceInfo.ram) {
             html += `
@@ -300,6 +309,7 @@ const Client = {
                     } else if (testId === 'storage') {
                         dataHtml += `
                             <div class="data-row"><span class="data-label">الاستخدام:</span> <span class="data-value">${result.data.usagePercent}%</span></div>
+                            <div class="data-row"><span class="data-label">نوع الهارد:</span> <span class="data-value">${result.data.diskType}</span></div>
                         `;
                     } else if (testId === 'gpu') {
                         dataHtml += `

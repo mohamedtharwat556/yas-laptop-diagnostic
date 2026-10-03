@@ -551,6 +551,56 @@
     gap: var(--spacing-4);
 }
 
+/* Screen Test Overlay */
+.screen-test-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.screen-test-overlay .screen-color-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+}
+
+.screen-test-overlay .screen-test-message {
+    position: relative;
+    z-index: 2;
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.screen-test-overlay .screen-test-controls {
+    position: relative;
+    z-index: 2;
+    bottom: auto;
+    margin-top: var(--spacing-8);
+    transform: none;
+    left: auto;
+}
+
+.screen-step {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-neutral-100);
+    padding: var(--spacing-2) var(--spacing-4);
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-md);
+}
+
 /* Virtual Keyboard */
 .virtual-keyboard-container {
     background-color: var(--color-neutral-800);
@@ -915,6 +965,48 @@
 #mouseTestContent {
     width: 100%;
     max-width: 800px;
+}
+
+.mouse-test-area {
+    background-color: var(--color-neutral-100);
+    border: 2px solid var(--color-neutral-300);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-8);
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: crosshair;
+    transition: border-color var(--transition-fast);
+}
+
+.mouse-test-area:hover {
+    border-color: var(--color-primary);
+}
+
+.mouse-instruction {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-neutral-700);
+    text-align: center;
+}
+
+.mouse-scroll-area {
+    background-color: var(--color-neutral-100);
+    border: 2px solid var(--color-neutral-300);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-4);
+    margin-top: var(--spacing-4);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.scroll-content {
+    font-size: var(--font-size-base);
+    color: var(--color-neutral-600);
+    text-align: center;
+    padding: var(--spacing-4);
 }
 
 /* Camera Test Overlay */

@@ -142,7 +142,8 @@ const DiagnosticEngine = {
         // المعالج
         info.cpu = {
             cores: navigator.hardwareConcurrency || 'غير متاح',
-            architecture: navigator.userAgentData?.platform || navigator.platform
+            architecture: navigator.userAgentData?.platform || navigator.platform,
+            model: this.detectCPUModel()
         };
         
         // الذاكرة
@@ -203,7 +204,7 @@ const DiagnosticEngine = {
         try {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            
+
             if (gl) {
                 const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
                 if (debugInfo) {
@@ -218,8 +219,31 @@ const DiagnosticEngine = {
         } catch (e) {
             console.log('GPU detection failed:', e);
         }
-        
+
         return { vendor: 'غير متاح', renderer: 'غير متاح' };
+    },
+
+    // كشف نموذج المعالج (محدود)
+    detectCPUModel: function() {
+        // Browser لا يستطيع تحديد نموذج المعالج والجيل بشكل دقيق
+        // هذه محاولة للقراءة من userAgent لكنها غير موثوقة
+        try {
+            const ua = navigator.userAgent;
+            let model = 'غير متاح - قيود المتصفح';
+
+            // محاولة استخراج معلومات من userAgent (غير موثوقة)
+            if (ua.includes('Intel')) {
+                model = 'Intel (التفاصيل غير متاحة)';
+            } else if (ua.includes('AMD')) {
+                model = 'AMD (التفاصيل غير متاحة)';
+            } else if (ua.includes('ARM')) {
+                model = 'ARM (التفاصيل غير متاحة)';
+            }
+
+            return model;
+        } catch (e) {
+            return 'غير متاح - قيود المتصفح';
+        }
     },
     
     // كشف البطارية
@@ -432,44 +456,48 @@ const DiagnosticEngine = {
         return new Promise((resolve) => {
             const colors = ['black', 'white', 'red', 'green', 'blue'];
             let currentColorIndex = 0;
-            
+
             // إخفاء container التفاعلي وجعل الشاشة full screen
             const container = document.getElementById('interactiveTestContainer');
             container.style.display = 'none';
-            
-            // إنشاء منطقة الاختبار مباشرة على body
-            const testArea = document.createElement('div');
-            testArea.className = 'screen-test-area black';
-            testArea.innerHTML = '<div class="screen-test-message">الأسود</div>';
-            document.body.appendChild(testArea);
-            
-            // أزرار التنقل
-            const controlsDiv = document.createElement('div');
-            controlsDiv.className = 'screen-test-controls';
-            controlsDiv.innerHTML = `
-                <button class="btn btn-secondary" id="screenPrevBtn" disabled>السابق</button>
-                <button class="btn btn-primary" id="screenNextBtn">التالي</button>
+
+            // إنشاء overlay للشاشة
+            const overlay = document.createElement('div');
+            overlay.className = 'test-overlay screen-test-overlay';
+            overlay.innerHTML = `
+                <div class="screen-color-area" id="screenColorArea" style="background-color: black;"></div>
+                <div class="screen-test-message" id="screenMessage">الأسود</div>
+                <div class="screen-test-controls">
+                    <button class="btn btn-secondary" id="screenPrevBtn" disabled>السابق</button>
+                    <span class="screen-step" id="screenStep">1/5</span>
+                    <button class="btn btn-primary" id="screenNextBtn">التالي</button>
+                </div>
             `;
-            document.body.appendChild(controlsDiv);
-            
+            document.body.appendChild(overlay);
+
+            const colorArea = document.getElementById('screenColorArea');
+            const messageEl = document.getElementById('screenMessage');
+            const stepEl = document.getElementById('screenStep');
             const prevBtn = document.getElementById('screenPrevBtn');
             const nextBtn = document.getElementById('screenNextBtn');
-            
+
+            const colorNames = ['الأسود', 'الأبيض', 'الأحمر', 'الأخضر', 'الأزرق'];
+            const colorHex = ['black', 'white', 'red', 'green', 'blue'];
+
             // زر التالي
             nextBtn.addEventListener('click', () => {
                 currentColorIndex++;
                 if (currentColorIndex >= colors.length) {
                     // اكمال الاختبار
-                    testArea.remove();
-                    controlsDiv.remove();
+                    overlay.remove();
                     container.style.display = 'block';
                     this.showScreenQuestion(resolve);
                 } else {
                     // تحديث اللون
-                    testArea.className = `screen-test-area ${colors[currentColorIndex]}`;
-                    const colorNames = ['الأسود', 'الأبيض', 'الأحمر', 'الأخضر', 'الأزرق'];
-                    testArea.innerHTML = `<div class="screen-test-message">${colorNames[currentColorIndex]}</div>`;
-                    
+                    colorArea.style.backgroundColor = colorHex[currentColorIndex];
+                    messageEl.textContent = colorNames[currentColorIndex];
+                    stepEl.textContent = `${currentColorIndex + 1}/5`;
+
                     // تحديث الأزرار
                     prevBtn.disabled = false;
                     if (currentColorIndex === colors.length - 1) {
@@ -477,15 +505,15 @@ const DiagnosticEngine = {
                     }
                 }
             });
-            
+
             // زر السابق
             prevBtn.addEventListener('click', () => {
                 if (currentColorIndex > 0) {
                     currentColorIndex--;
-                    testArea.className = `screen-test-area ${colors[currentColorIndex]}`;
-                    const colorNames = ['الأسود', 'الأبيض', 'الأحمر', 'الأخضر', 'الأزرق'];
-                    testArea.innerHTML = `<div class="screen-test-message">${colorNames[currentColorIndex]}</div>`;
-                    
+                    colorArea.style.backgroundColor = colorHex[currentColorIndex];
+                    messageEl.textContent = colorNames[currentColorIndex];
+                    stepEl.textContent = `${currentColorIndex + 1}/5`;
+
                     // تحديث الأزرار
                     prevBtn.disabled = currentColorIndex === 0;
                     nextBtn.textContent = 'التالي';
@@ -1152,7 +1180,13 @@ const DiagnosticEngine = {
             if (!navigator.storage || !navigator.storage.estimate) {
                 resolve({
                     status: 'limited',
-                    details: 'Storage API غير متاح في هذا المتصفح'
+                    details: 'Storage API غير متاح في هذا المتصفح. المتصفح لا يستطيع تحديد نوع الهارد (SSD/HDD) بسبب قيود الأمان.',
+                    data: {
+                        usage: 0,
+                        quota: 0,
+                        usagePercent: 0,
+                        diskType: 'غير متاح'
+                    }
                 });
                 return;
             }
@@ -1164,18 +1198,25 @@ const DiagnosticEngine = {
 
                 resolve({
                     status: 'passed',
-                    details: `تم التحقق من قدرات التخزين المتاحة للمتصفح فقط. Usage: ${usageMB}MB / ${quotaMB}MB (${usagePercent}%)`,
+                    details: `تم التحقق من قدرات التخزين المتاحة للمتصفح فقط. المتصفح لا يستطيع تحديد نوع الهارد (SSD/HDD) بسبب قيود الأمان.`,
                     data: {
                         usage: estimate.usage,
                         quota: estimate.quota,
-                        usagePercent: usagePercent
+                        usagePercent: usagePercent,
+                        diskType: 'غير متاح - قيود المتصفح'
                     }
                 });
             }).catch(error => {
                 console.log('Storage test failed:', error);
                 resolve({
                     status: 'limited',
-                    details: 'تعذر قراءة معلومات التخزين'
+                    details: 'تعذر قراءة معلومات التخزين. المتصفح لا يستطيع تحديد نوع الهارد (SSD/HDD) بسبب قيود الأمان.',
+                    data: {
+                        usage: 0,
+                        quota: 0,
+                        usagePercent: 0,
+                        diskType: 'غير متاح'
+                    }
                 });
             });
         });
