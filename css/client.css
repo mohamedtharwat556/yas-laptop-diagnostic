@@ -425,6 +425,31 @@
     margin-top: var(--spacing-2);
 }
 
+.test-result-data {
+    margin-top: var(--spacing-3);
+    padding: var(--spacing-3);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-neutral-200);
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-1) 0;
+    font-size: var(--font-size-sm);
+}
+
+.data-label {
+    color: var(--color-neutral-500);
+    font-weight: var(--font-weight-medium);
+}
+
+.data-value {
+    color: var(--color-neutral-800);
+    font-weight: var(--font-weight-medium);
+}
+
 /* Result Actions */
 .result-actions {
     display: flex;

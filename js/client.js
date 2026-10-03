@@ -275,6 +275,41 @@ const Client = {
                 const status = statusMap[result.status] || statusMap['not_available'];
                 const testName = testNames[testId] || testId;
 
+                // عرض البيانات التفصيلية
+                let dataHtml = '';
+                if (result.data) {
+                    dataHtml = '<div class="test-result-data">';
+                    if (testId === 'network') {
+                        dataHtml += `
+                            <div class="data-row"><span class="data-label">الحالة:</span> <span class="data-value">${result.data.online ? 'متصل' : 'غير متصل'}</span></div>
+                            <div class="data-row"><span class="data-label">النوع:</span> <span class="data-value">${result.data.type}</span></div>
+                            <div class="data-row"><span class="data-label">السرعة:</span> <span class="data-value">${result.data.downlink}</span></div>
+                            <div class="data-row"><span class="data-label">RTT:</span> <span class="data-value">${result.data.rtt}</span></div>
+                        `;
+                    } else if (testId === 'battery') {
+                        dataHtml += `
+                            <div class="data-row"><span class="data-label">المستوى:</span> <span class="data-value">${result.data.level}%</span></div>
+                            <div class="data-row"><span class="data-label">الحالة:</span> <span class="data-value">${result.data.charging ? 'جاري الشحن' : 'غير مشحون'}</span></div>
+                        `;
+                    } else if (testId === 'performance') {
+                        dataHtml += `
+                            <div class="data-row"><span class="data-label">العمليات:</span> <span class="data-value">${result.data.iterations.toLocaleString()}</span></div>
+                            <div class="data-row"><span class="data-label">المدة:</span> <span class="data-value">${result.data.duration.toFixed(2)}ms</span></div>
+                            <div class="data-row"><span class="data-label">Web Worker:</span> <span class="data-value">${result.data.workerAvailable ? 'متاح' : 'غير متاح'}</span></div>
+                        `;
+                    } else if (testId === 'storage') {
+                        dataHtml += `
+                            <div class="data-row"><span class="data-label">الاستخدام:</span> <span class="data-value">${result.data.usagePercent}%</span></div>
+                        `;
+                    } else if (testId === 'gpu') {
+                        dataHtml += `
+                            <div class="data-row"><span class="data-label">WebGL:</span> <span class="data-value">${result.data.webgl ? 'متاح' : 'غير متاح'}</span></div>
+                            <div class="data-row"><span class="data-label">Renderer:</span> <span class="data-value">${result.data.renderer || 'محدود'}</span></div>
+                        `;
+                    }
+                    dataHtml += '</div>';
+                }
+
                 html += `
                     <div class="test-result-item">
                         <div class="test-result-header">
@@ -282,6 +317,7 @@ const Client = {
                             <span class="badge ${status.class}">${status.text}</span>
                         </div>
                         ${result.details ? `<div class="test-result-details">${result.details}</div>` : ''}
+                        ${dataHtml}
                     </div>
                 `;
             });
