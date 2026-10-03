@@ -41,6 +41,50 @@
                     </div>
                 </div>
 
+                <!-- Agent Unavailable Card -->
+                <div class="agent-unavailable-card" id="agentUnavailableCard" style="display: none;">
+                    <div class="card-icon">📦</div>
+                    <h2 class="card-title">للحصول على فحص هاردوير شامل</h2>
+                    <p class="card-description">
+                        يمكن للموقع تنفيذ الفحوصات الأساسية من المتصفح، ولكن للحصول على معلومات دقيقة عن المعالج والذاكرة وكارت الشاشة والتخزين والبطارية، يحتاج الفحص إلى مساعد YAS على جهازك.
+                    </p>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-lg" id="downloadAgentBtn" style="display: none;">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 2v12M16 12l-6 6-6-6M2 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            تحميل مساعد فحص YAS
+                        </button>
+                        <button class="btn btn-secondary btn-lg" id="verifyInstallationBtn" style="display: none;">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 10l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            تحقق من التثبيت
+                        </button>
+                        <button class="btn btn-tertiary btn-lg" id="continueWithoutAgentBtn">
+                            متابعة بالفحص الأساسي
+                        </button>
+                        <div class="download-url-message" id="downloadURLMessage" style="display: none; text-align: center; padding: var(--spacing-3); color: var(--color-warning-700); font-size: var(--font-size-sm);">
+                            رابط تحميل المساعد غير متاح حاليًا
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Information Display Section -->
+                <div class="device-info-section" id="deviceInfoSection" style="display: none;">
+                    <div class="section-header">
+                        <h2 class="section-title">معلومات الجهاز</h2>
+                        <button class="btn btn-sm btn-secondary" id="refreshHardwareBtn" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 4v5h5M16 16v-5h-5M4 4l3 3M16 16l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="device-info-grid" id="deviceInfoGrid">
+                        <!-- Device info cards will be populated by JavaScript -->
+                    </div>
+                </div>
+
                 <!-- Device Detection Section -->
                 <div class="device-detection-section">
                     <h2 class="section-title">اكتشاف الجهاز</h2>
@@ -117,6 +161,7 @@
     <script src="../js/sessionService.js"></script>
     <script src="../js/state.js"></script>
     <script src="../js/hardwareAgent.js"></script>
+    <script src="../js/agentUI.js"></script>
     <script src="../js/keyboard.js"></script>
     <script src="../js/diagnostic.js"></script>
 </body>

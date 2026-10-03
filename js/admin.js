@@ -312,9 +312,18 @@ const Admin = {
 
             // Show source for technician
             if (deviceInfo.hardwareSource) {
-                html += '<div class="info-item" style="margin-top: 20px; border-top: 1px solid var(--color-neutral-200); padding-top: 10px;">';
-                html += `<span class="info-label">مصدر المعلومات:</span>`;
-                html += `<span class="info-value">${deviceInfo.hardwareSource === 'hardware-agent' ? 'Hardware Agent' : 'Browser'}</span>`;
+                const sourceLabel = deviceInfo.hardwareSource === 'hardware-agent' 
+                    ? 'مساعد فحص YAS (Hardware Agent)'
+                    : 'المتصفح (Browser)';
+                const timestamp = deviceInfo.hardwareCapturedAt 
+                    ? new Date(deviceInfo.hardwareCapturedAt).toLocaleString('ar-SA')
+                    : 'غير متاح';
+                
+                html += '<div class="info-item" style="margin-top: 20px; border-top: 1px solid var(--color-neutral-200); padding-top: 10px; background-color: var(--color-neutral-50); padding: 10px; border-radius: 4px;">';
+                html += `<span class="info-label" style="font-weight: bold; color: var(--color-primary);">مصدر المعلومات:</span>`;
+                html += `<span class="info-value" style="color: var(--color-success-700); font-weight: 500;">${sourceLabel}</span>`;
+                html += `<br/><span class="info-label" style="font-size: 0.85em; color: var(--color-neutral-600); margin-top: 5px; display: block;">وقت الجمع:</span>`;
+                html += `<span class="info-value" style="font-size: 0.85em; color: var(--color-neutral-600);">${timestamp}</span>`;
                 html += '</div>';
             }
         } else {

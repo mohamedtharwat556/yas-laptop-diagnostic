@@ -1277,3 +1277,235 @@
         grid-template-columns: 1fr;
     }
 }
+
+
+/* ============================================
+   BATCH 6B-2b: Hardware Agent Detection UI
+   ============================================ */
+
+/* Agent Unavailable Card */
+.agent-unavailable-card {
+    background: linear-gradient(135deg, var(--color-warning-50) 0%, var(--color-warning-100) 100%);
+    border: 2px solid var(--color-warning-200);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-6);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.agent-unavailable-card .card-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-3);
+}
+
+.agent-unavailable-card .card-title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-neutral-900);
+    margin-bottom: var(--spacing-3);
+}
+
+.agent-unavailable-card .card-description {
+    font-size: var(--font-size-base);
+    color: var(--color-neutral-700);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-5);
+    text-align: right;
+    direction: rtl;
+}
+
+.agent-unavailable-card .card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.agent-unavailable-card .card-actions .btn {
+    flex: 1;
+    min-height: 44px;
+    font-size: var(--font-size-base);
+}
+
+.agent-unavailable-card .btn-primary {
+    background-color: var(--color-warning-600);
+    color: white;
+    border: none;
+}
+
+.agent-unavailable-card .btn-primary:hover {
+    background-color: var(--color-warning-700);
+}
+
+.agent-unavailable-card .btn-secondary {
+    background-color: var(--color-neutral-600);
+    color: white;
+    border: none;
+}
+
+.agent-unavailable-card .btn-secondary:hover {
+    background-color: var(--color-neutral-700);
+}
+
+.agent-unavailable-card .btn-tertiary {
+    background-color: transparent;
+    color: var(--color-neutral-700);
+    border: 2px solid var(--color-neutral-300);
+}
+
+.agent-unavailable-card .btn-tertiary:hover {
+    background-color: var(--color-neutral-100);
+}
+
+/* Device Info Display Section */
+.device-info-section {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-6);
+    margin-bottom: var(--spacing-6);
+    box-shadow: var(--shadow-sm);
+}
+
+.device-info-section .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-4);
+    direction: rtl;
+}
+
+.device-info-section .section-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-neutral-900);
+}
+
+.device-info-section .source-badge {
+    display: inline-block;
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.device-info-section .source-badge.hardware-agent {
+    background-color: var(--color-success-100);
+    color: var(--color-success-800);
+}
+
+.device-info-section .source-badge.browser {
+    background-color: var(--color-blue-100);
+    color: var(--color-blue-800);
+}
+
+.device-info-section .source-badge.unavailable {
+    background-color: var(--color-neutral-100);
+    color: var(--color-neutral-700);
+}
+
+.device-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+}
+
+.device-info-card {
+    background-color: var(--color-neutral-50);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-4);
+    text-align: right;
+    direction: rtl;
+}
+
+.device-info-card .card-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-600);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-2);
+}
+
+.device-info-card .card-value {
+    font-size: var(--font-size-base);
+    color: var(--color-neutral-900);
+    font-weight: var(--font-weight-semibold);
+    word-break: break-word;
+}
+
+.device-info-card .card-source {
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-500);
+    margin-top: var(--spacing-2);
+}
+
+/* Agent Status Indicator */
+.agent-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    direction: rtl;
+    margin-bottom: var(--spacing-3);
+}
+
+.agent-status-indicator .status-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--color-neutral-300);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.agent-status-indicator .status-dot.connected {
+    background-color: var(--color-success-500);
+}
+
+.agent-status-indicator .status-dot.disconnected {
+    background-color: var(--color-warning-500);
+    animation: none;
+}
+
+.agent-status-indicator .status-dot.error {
+    background-color: var(--color-danger-500);
+    animation: none;
+}
+
+.agent-status-indicator .status-text {
+    color: var(--color-neutral-700);
+    font-size: var(--font-size-sm);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Refresh Hardware Button */
+.refresh-hardware-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .device-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .agent-unavailable-card .card-actions {
+        flex-direction: column;
+    }
+
+    .agent-unavailable-card .card-actions .btn {
+        width: 100%;
+    }
+
+    .device-info-section {
+        padding: var(--spacing-4);
+    }
+}

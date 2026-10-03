@@ -94,6 +94,11 @@ const DiagnosticEngine = {
             return;
         }
 
+        // Initialize Agent UI (BATCH 6B-2b)
+        if (typeof AgentUI !== 'undefined') {
+            await AgentUI.init();
+        }
+
         // تحديث حالة Hardware Agent
         this.updateAgentStatus();
 
@@ -126,6 +131,29 @@ const DiagnosticEngine = {
         this.showViewResultsButton();
         
         console.log('Diagnostic Engine - Complete');
+    },
+
+    // Start tests (can be called separately after Agent detection)
+    startTests: async function() {
+        console.log('DiagnosticEngine.startTests() - Starting tests...');
+        
+        // تحديث الحالة
+        this.updateStatus('جاري تشغيل الاختبارات...');
+
+        // عرض قائمة الاختبارات
+        this.displayTestsList();
+
+        // Setup refresh button
+        this.setupRefreshButton();
+
+        // تشغيل الاختبارات
+        await this.runTests();
+        
+        // إكمال الفحص
+        this.updateStatus('تم إكمال الفحص');
+        this.showViewResultsButton();
+        
+        console.log('DiagnosticEngine - Tests Complete');
     },
     
     // جمع معلومات الجهاز

@@ -1,10 +1,59 @@
 // YAS Laptop Diagnostic System - Hardware Agent Client
+// BATCH 6B-2b: Hardware Agent Detection + Installation Flow
 // This module handles communication with the YAS Hardware Agent
 
+// Agent States (State Machine)
+const AgentState = {
+    CHECKING: 'CHECKING',           // جاري التحقق
+    CONNECTED: 'CONNECTED',         // متصل
+    DISCONNECTED: 'DISCONNECTED',   // غير متصل
+    ERROR: 'ERROR',                 // خطأ
+    COLLECTING: 'COLLECTING',       // جاري قراءة المعلومات
+    COMPLETED: 'COMPLETED'          // اكتمل
+};
+
+// Agent State Messages (Arabic)
+const AgentStateMessages = {
+    CHECKING: 'جاري التحقق من مساعد فحص YAS...',
+    CONNECTED: 'مساعد فحص YAS متصل',
+    DISCONNECTED: 'مساعد فحص الجهاز غير متصل',
+    ERROR: 'تعذر الاتصال بمساعد فحص YAS',
+    COLLECTING: 'جاري قراءة معلومات الجهاز...',
+    COMPLETED: 'تم التعرف على معلومات الجهاز'
+};
+
+// Hardware Agent Configuration
 const HARDWARE_AGENT_CONFIG = {
-    host: "127.0.0.1",
-    port: null, // To be configured when agent is available
-    timeout: 5000 // 5 seconds timeout
+    // Get base URL from environment or use default
+    getBaseURL: function() {
+        // Check for environment variable first (for production)
+        if (typeof VITE_HARDWARE_AGENT_URL !== 'undefined') {
+            return VITE_HARDWARE_AGENT_URL;
+        }
+        // Check localStorage for configured URL (for development)
+        const stored = localStorage.getItem('hardware_agent_url');
+        if (stored) {
+            return stored;
+        }
+        // Default to localhost
+        return 'http://127.0.0.1:5275';
+    },
+    
+    timeout: 3000, // 3 seconds timeout (2 second grace period before decision)
+    
+    // Download URL for Hardware Agent installer
+    getDownloadURL: function() {
+        if (typeof VITE_HARDWARE_AGENT_DOWNLOAD_URL !== 'undefined') {
+            return VITE_HARDWARE_AGENT_DOWNLOAD_URL;
+        }
+        return null; // Not configured
+    },
+    
+    // Retry configuration for installation verification
+    retryConfig: {
+        attempts: 3,
+        delays: [500, 1000, 2000] // milliseconds
+    }
 };
 
 const HardwareAgent = {
@@ -24,22 +73,51 @@ const HardwareAgent = {
         NONE: 'NONE'
     },
 
+    // States
+    state: AgentState.DISCONNECTED,
+    
     // Current connection status
     isConnected: false,
     agentInfo: null,
+    lastHardwareData: null,
+    
+    // State change callback
+    onStateChange: null,
 
-    // Check if agent is available
-    detectAgent: async function() {
-        if (!HARDWARE_AGENT_CONFIG.port) {
-            console.log('Hardware Agent port not configured');
-            return false;
+    // Set state and trigger callback
+    setState: function(newState) {
+        if (this.state !== newState) {
+            const oldState = this.state;
+            this.state = newState;
+            console.log(`[Agent] State: ${oldState} → ${newState} | ${AgentStateMessages[newState]}`);
+            
+            // Trigger callback
+            if (this.onStateChange && typeof this.onStateChange === 'function') {
+                this.onStateChange({
+                    oldState: oldState,
+                    newState: newState,
+                    message: AgentStateMessages[newState]
+                });
+            }
         }
+    },
+
+    // Check if agent is available (Health Check)
+    detectAgent: async function() {
+        console.log('[Agent] Detecting agent...');
+        this.setState(AgentState.CHECKING);
+        
+        const baseURL = HARDWARE_AGENT_CONFIG.getBaseURL();
+        console.log(`[Agent] Base URL: ${baseURL}`);
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
+            const timeoutId = setTimeout(() => {
+                console.log('[Agent] Health check timeout');
+                controller.abort();
+            }, HARDWARE_AGENT_CONFIG.timeout);
 
-            const response = await fetch(`http://${HARDWARE_AGENT_CONFIG.host}:${HARDWARE_AGENT_CONFIG.port}/api/health`, {
+            const response = await fetch(`${baseURL}/api/health`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -54,33 +132,30 @@ const HardwareAgent = {
                 if (data.status === 'ok') {
                     this.isConnected = true;
                     this.agentInfo = data;
-                    console.log('Hardware Agent connected:', data);
+                    this.setState(AgentState.CONNECTED);
+                    console.log('[Agent] Connected successfully:', data);
                     return true;
                 }
             }
         } catch (error) {
-            console.log('Hardware Agent not available:', error.message);
+            console.log(`[Agent] Detection failed: ${error.message}`);
         }
 
         this.isConnected = false;
         this.agentInfo = null;
+        this.setState(AgentState.DISCONNECTED);
         return false;
     },
 
     // Get agent health status
     getHealth: async function() {
-        if (!HARDWARE_AGENT_CONFIG.port) {
-            return {
-                status: 'error',
-                message: 'Agent port not configured'
-            };
-        }
+        const baseURL = HARDWARE_AGENT_CONFIG.getBaseURL();
 
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
 
-            const response = await fetch(`http://${HARDWARE_AGENT_CONFIG.host}:${HARDWARE_AGENT_CONFIG.port}/api/health`, {
+            const response = await fetch(`${baseURL}/api/health`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -108,15 +183,20 @@ const HardwareAgent = {
 
     // Get hardware information from agent
     getHardware: async function() {
-        if (!HARDWARE_AGENT_CONFIG.port) {
-            return this.handleAgentUnavailable('Port not configured');
+        const baseURL = HARDWARE_AGENT_CONFIG.getBaseURL();
+        
+        if (!this.isConnected) {
+            console.log('[Agent] Not connected, cannot collect hardware');
+            return this.handleAgentUnavailable('Agent not connected');
         }
+
+        this.setState(AgentState.COLLECTING);
 
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
 
-            const response = await fetch(`http://${HARDWARE_AGENT_CONFIG.host}:${HARDWARE_AGENT_CONFIG.port}/api/hardware`, {
+            const response = await fetch(`${baseURL}/api/hardware`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -128,11 +208,15 @@ const HardwareAgent = {
 
             if (response.ok) {
                 const data = await response.json();
+                this.lastHardwareData = data;
+                this.setState(AgentState.COMPLETED);
                 return this.normalizeHardwareData(data);
             } else {
+                this.setState(AgentState.ERROR);
                 return this.handleInvalidResponse('Agent returned error');
             }
         } catch (error) {
+            this.setState(AgentState.ERROR);
             return this.handleAgentUnavailable(error.message);
         }
     },
@@ -215,15 +299,59 @@ const HardwareAgent = {
         const nowConnected = await this.detectAgent();
 
         if (wasConnected !== nowConnected) {
-            console.log('Agent connection status changed:', wasConnected, '->', nowConnected);
+            console.log('[Agent] Connection status changed:', wasConnected, '->', nowConnected);
         }
 
         return nowConnected;
     },
 
-    // Configure agent port
-    configurePort: function(port) {
-        HARDWARE_AGENT_CONFIG.port = port;
-        console.log('Hardware Agent port configured:', port);
+    // Verify installation with retry logic
+    verifyInstallation: async function() {
+        console.log('[Agent] Starting installation verification...');
+        const config = HARDWARE_AGENT_CONFIG.retryConfig;
+        
+        for (let attempt = 1; attempt <= config.attempts; attempt++) {
+            console.log(`[Agent] Verification attempt ${attempt}/${config.attempts}`);
+            
+            const connected = await this.detectAgent();
+            if (connected) {
+                console.log('[Agent] Installation verified successfully!');
+                return true;
+            }
+            
+            if (attempt < config.attempts) {
+                const delay = config.delays[attempt - 1];
+                console.log(`[Agent] Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+        
+        console.log('[Agent] Installation verification failed after all attempts');
+        return false;
+    },
+
+    // Get download URL
+    getDownloadURL: function() {
+        return HARDWARE_AGENT_CONFIG.getDownloadURL();
+    },
+
+    // Check if download URL is configured
+    isDownloadAvailable: function() {
+        return this.getDownloadURL() !== null;
+    },
+
+    // Configure agent URL (for testing)
+    configureURL: function(url) {
+        localStorage.setItem('hardware_agent_url', url);
+        console.log('[Agent] URL configured:', url);
+    },
+
+    // Reset agent state
+    reset: function() {
+        this.state = AgentState.DISCONNECTED;
+        this.isConnected = false;
+        this.agentInfo = null;
+        this.lastHardwareData = null;
+        console.log('[Agent] State reset');
     }
 };
