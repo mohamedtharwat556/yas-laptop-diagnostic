@@ -1,0 +1,120 @@
+/* YAS Laptop Diagnostic System - Admin Portal Styles */
+
+.admin-body {
+    background-color: var(--color-neutral-50);
+    min-height: 100vh;
+}
+
+/* Admin Login Container */
+.admin-login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--color-neutral-900) 0%, var(--color-neutral-800) 100%);
+    padding: var(--spacing-4);
+}
+
+.admin-login-box {
+    background-color: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: var(--radius-2xl);
+    padding: var(--spacing-8);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-xl);
+}
+
+.admin-login-header {
+    text-align: center;
+    margin-bottom: var(--spacing-8);
+}
+
+.admin-login-header .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-3);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-4);
+}
+
+.admin-login-header .logo svg {
+    color: var(--color-primary);
+}
+
+.admin-login-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-neutral-800);
+    margin-bottom: var(--spacing-2);
+}
+
+.admin-login-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--color-neutral-500);
+}
+
+.admin-login-form .form-actions {
+    margin-top: var(--spacing-6);
+}
+
+.admin-login-note {
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-400);
+    margin-top: var(--spacing-4);
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: var(--spacing-4);
+    border-top: 1px solid var(--color-neutral-700);
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-4);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+.info-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-500);
+    font-weight: var(--font-weight-medium);
+}
+
+.info-value {
+    font-size: var(--font-size-base);
+    color: var(--color-neutral-800);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Session Details Container */
+.session-details-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-6);
+}
+
+/* Responsive Admin */
+@media (max-width: 768px) {
+    .admin-login-box {
+        padding: var(--spacing-6);
+    }
+    
+    .admin-login-title {
+        font-size: var(--font-size-xl);
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

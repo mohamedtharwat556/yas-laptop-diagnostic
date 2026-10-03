@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAS Laptop Diagnostic System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/client.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body class="client-body">
+    <div class="client-container">
+        <!-- Header -->
+        <header class="client-header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="4" width="36" height="24" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="30" width="28" height="4" rx="1" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="8" width="28" height="16" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <span class="logo-text">YAS Diagnostic</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="client-main">
+            <div class="client-content">
+                <div class="client-hero">
+                    <h1 class="client-title">YAS Laptop Diagnostic System</h1>
+                    <p class="client-description">
+                        نظام فحص أجهزة اللابتوب قبل دخولها إلى الصيانة
+                    </p>
+                </div>
+
+                <div class="portal-selection">
+                    <div class="portal-card" onclick="window.location.href='client/index.html'">
+                        <div class="portal-icon">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2"/>
+                                <path d="M20 32h24M32 20v24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h2 class="portal-title">عميل</h2>
+                        <p class="portal-description">ابدأ فحص جهازك</p>
+                        <button class="btn btn-primary btn-lg btn-full">
+                            الدخول
+                        </button>
+                    </div>
+
+                    <div class="portal-card" onclick="window.location.href='admin/login.html'">
+                        <div class="portal-icon">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="8" y="8" width="48" height="48" rx="4" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="32" cy="28" r="8" stroke="currentColor" stroke-width="2"/>
+                                <path d="M16 52c0-8 6-14 16-14s16 6 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h2 class="portal-title">مشرف</h2>
+                        <p class="portal-description">لوحة التحكم الإدارية</p>
+                        <button class="btn btn-secondary btn-lg btn-full">
+                            الدخول
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="client-footer">
+            <p>&copy; 2024 YAS Laptop Diagnostic System</p>
+        </footer>
+    </div>
+
+    <style>
+        .portal-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-8);
+            margin-top: var(--spacing-8);
+        }
+
+        .portal-card {
+            background-color: var(--color-neutral-100);
+            border: 1px solid var(--color-neutral-200);
+            border-radius: var(--radius-2xl);
+            padding: var(--spacing-8);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .portal-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .portal-icon {
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-4);
+        }
+
+        .portal-title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-neutral-800);
+            margin-bottom: var(--spacing-2);
+        }
+
+        .portal-description {
+            font-size: var(--font-size-base);
+            color: var(--color-neutral-600);
+            margin-bottom: var(--spacing-6);
+        }
+    </style>
+</body>
+</html>

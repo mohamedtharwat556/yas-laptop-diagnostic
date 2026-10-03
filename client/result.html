@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAS Laptop Diagnostic - نتائج الفحص</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/client.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body class="client-body">
+    <div class="client-container">
+        <!-- Header -->
+        <header class="client-header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="4" width="36" height="24" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="30" width="28" height="4" rx="1" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="8" width="28" height="16" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <span class="logo-text">YAS Diagnostic</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="client-main">
+            <div class="client-content">
+                <div class="result-header">
+                    <h1 class="result-title">نتائج الفحص</h1>
+                    <p class="result-status" id="resultStatus">تم إكمال الفحص بنجاح</p>
+                </div>
+
+                <!-- Summary -->
+                <div class="result-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon summary-icon-success">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2"/>
+                                <path d="M10 16l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="passedTests">0</div>
+                            <div class="summary-label">اختبارات ناجحة</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon summary-icon-warning">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2"/>
+                                <path d="M16 8v8M16 20v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="warningTests">0</div>
+                            <div class="summary-label">تحذيرات</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon summary-icon-danger">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 12l8 8M20 12l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="failedTests">0</div>
+                            <div class="summary-label">فشل</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Info -->
+                <div class="result-section">
+                    <h2 class="section-title">معلومات الجهاز</h2>
+                    <div class="device-info-details" id="deviceInfoDetails">
+                        <!-- Device info will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Test Results -->
+                <div class="result-section">
+                    <h2 class="section-title">نتائج الاختبارات</h2>
+                    <div class="test-results-list" id="testResultsList">
+                        <!-- Test results will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="result-actions">
+                    <button class="btn btn-primary btn-lg btn-full" onclick="window.print()">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 3h8M4 8h12M4 14h12M6 17v-3h8v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        طباعة التقرير
+                    </button>
+                    <button class="btn btn-secondary btn-lg btn-full" onclick="window.location.href='index.html'">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 10h14M10 3l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        فحص جهاز آخر
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="client-footer">
+            <p>&copy; 2024 YAS Laptop Diagnostic System</p>
+        </footer>
+    </div>
+
+    <script src="../js/state.js"></script>
+    <script src="../js/client.js"></script>
+</body>
+</html>

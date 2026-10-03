@@ -1,0 +1,221 @@
+/* YAS Laptop Diagnostic System - Responsive Design */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .main-content {
+        margin-right: 240px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tests-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(100%);
+        width: 280px;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-right: 0;
+    }
+    
+    .menu-toggle {
+        display: block;
+    }
+    
+    .header {
+        padding: var(--spacing-3) var(--spacing-4);
+    }
+    
+    .header-title h1 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .page-content {
+        padding: var(--spacing-4);
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-4);
+    }
+    
+    .stat-card {
+        padding: var(--spacing-4);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .stat-value {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .dashboard-section {
+        padding: var(--spacing-4);
+    }
+    
+    .section-title {
+        font-size: var(--font-size-lg);
+    }
+    
+    .data-table {
+        font-size: var(--font-size-sm);
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+    
+    .form-container {
+        padding: var(--spacing-6);
+    }
+    
+    .form-header h2 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+    
+    .tests-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .session-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-4);
+    }
+    
+    .device-details {
+        flex-direction: column;
+        gap: var(--spacing-2);
+    }
+    
+    .session-actions {
+        flex-direction: column;
+    }
+    
+    .session-actions .btn {
+        width: 100%;
+    }
+    
+    .empty-state {
+        padding: var(--spacing-8);
+    }
+    
+    .empty-state svg {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .empty-state h2 {
+        font-size: var(--font-size-xl);
+    }
+}
+
+/* Small Mobile (< 480px) */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 100%;
+    }
+    
+    .header-title h1 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .user-name {
+        display: none;
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stat-icon {
+        margin: 0 auto;
+    }
+    
+    .form-container {
+        padding: var(--spacing-4);
+    }
+    
+    .form-header h2 {
+        font-size: var(--font-size-lg);
+    }
+    
+    .btn {
+        padding: var(--spacing-3) var(--spacing-5);
+    }
+    
+    .btn-lg {
+        padding: var(--spacing-3) var(--spacing-6);
+        font-size: var(--font-size-base);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .menu-toggle,
+    .header-actions,
+    .form-actions,
+    .session-actions,
+    .test-card-footer {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-right: 0;
+    }
+    
+    .page {
+        display: block !important;
+    }
+    
+    body {
+        background-color: white;
+    }
+    
+    .stat-card,
+    .dashboard-section,
+    .form-container,
+    .test-card,
+    .session-header {
+        box-shadow: none;
+        border: 1px solid var(--color-neutral-300);
+    }
+}
