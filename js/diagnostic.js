@@ -133,19 +133,21 @@ const DiagnosticEngine = {
         let info = {};
         let hardwareSource = HardwareAgent.SOURCES.BROWSER;
 
-        // Try to get data from Hardware Agent first
-        await HardwareAgent.detectAgent();
+        // Try to get data from Hardware Agent first (only if port is configured)
+        if (HARDWARE_AGENT_CONFIG.port) {
+            await HardwareAgent.detectAgent();
 
-        if (HardwareAgent.isConnected) {
-            try {
-                const agentData = await HardwareAgent.getHardware();
-                if (!agentData.error) {
-                    info = this.mergeDeviceInfo(agentData);
-                    hardwareSource = HardwareAgent.SOURCES.HARDWARE_AGENT;
-                    console.log('Using Hardware Agent data');
+            if (HardwareAgent.isConnected) {
+                try {
+                    const agentData = await HardwareAgent.getHardware();
+                    if (!agentData.error) {
+                        info = this.mergeDeviceInfo(agentData);
+                        hardwareSource = HardwareAgent.SOURCES.HARDWARE_AGENT;
+                        console.log('Using Hardware Agent data');
+                    }
+                } catch (error) {
+                    console.log('Failed to get Hardware Agent data, using browser fallback:', error);
                 }
-            } catch (error) {
-                console.log('Failed to get Hardware Agent data, using browser fallback:', error);
             }
         }
 
@@ -651,13 +653,34 @@ const DiagnosticEngine = {
         statusDot.classList.remove('connected', 'disconnected');
         statusText.textContent = 'جاري التحقق من مساعد فحص الجهاز...';
 
-        const connected = await HardwareAgent.detectAgent();
+        // Only try to detect agent if port is configured
+        if (!HARDWARE_AGENT_CONFIG.port) {
+            statusDot.classList.add('disconnected');
+            statusText.textContent = 'مساعد فحص الجهاز غير متصل';
+            if (details) {
+                details.style.display = 'block';
+                details.querySelector('.agent-detail').textContent = 'سيتم استخدام معلومات المتصفح المتاحة';
+            }
+            return;
+        }
 
-        if (connected) {
-            statusDot.classList.add('connected');
-            statusText.textContent = 'مساعد فحص الجهاز متصل';
-            if (details) details.style.display = 'none';
-        } else {
+        try {
+            const connected = await HardwareAgent.detectAgent();
+
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'مساعد فحص الجهاز متصل';
+                if (details) details.style.display = 'none';
+            } else {
+                statusDot.classList.add('disconnected');
+                statusText.textContent = 'مساعد فحص الجهاز غير متصل';
+                if (details) {
+                    details.style.display = 'block';
+                    details.querySelector('.agent-detail').textContent = 'سيتم استخدام معلومات المتصفح المتاحة';
+                }
+            }
+        } catch (error) {
+            console.log('Agent status check failed:', error);
             statusDot.classList.add('disconnected');
             statusText.textContent = 'مساعد فحص الجهاز غير متصل';
             if (details) {

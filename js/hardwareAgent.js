@@ -36,13 +36,18 @@ const HardwareAgent = {
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
+
             const response = await fetch(`http://${HARDWARE_AGENT_CONFIG.host}:${HARDWARE_AGENT_CONFIG.port}/api/health`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                signal: AbortSignal.timeout(HARDWARE_AGENT_CONFIG.timeout)
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (response.ok) {
                 const data = await response.json();
@@ -72,13 +77,18 @@ const HardwareAgent = {
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
+
             const response = await fetch(`http://${HARDWARE_AGENT_CONFIG.host}:${HARDWARE_AGENT_CONFIG.port}/api/health`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                signal: AbortSignal.timeout(HARDWARE_AGENT_CONFIG.timeout)
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (response.ok) {
                 return await response.json();
@@ -103,13 +113,18 @@ const HardwareAgent = {
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
+
             const response = await fetch(`http://${HARDWARE_AGENT_CONFIG.host}:${HARDWARE_AGENT_CONFIG.port}/api/hardware`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                signal: AbortSignal.timeout(HARDWARE_AGENT_CONFIG.timeout)
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (response.ok) {
                 const data = await response.json();
