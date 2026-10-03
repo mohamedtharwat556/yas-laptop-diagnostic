@@ -782,7 +782,7 @@ const DiagnosticEngine = {
                 const result = await this.runTest(test);
 
                 // حفظ النتيجة
-                AppState.saveTestResult(test.id, result);
+                await AppState.saveTestResult(test.id, result);
 
                 // تحديث حالة الاختبار
                 this.updateTestStatus(test.id, this.getStatusText(result.status));
@@ -820,7 +820,7 @@ const DiagnosticEngine = {
         const result = await this.runTest(test);
 
         // حفظ النتيجة
-        AppState.saveTestResult(test.id, result);
+        await AppState.saveTestResult(test.id, result);
 
         // تحديث حالة الاختبار
         this.updateTestStatus(test.id, this.getStatusText(result.status));
