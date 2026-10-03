@@ -124,15 +124,131 @@ const DiagnosticEngine = {
     
     // جمع معلومات الجهاز
     detectDeviceInfo: async function() {
+        let info = {};
+        let hardwareSource = HardwareAgent.SOURCES.BROWSER;
+
+        // Try to get data from Hardware Agent first
+        await HardwareAgent.detectAgent();
+
+        if (HardwareAgent.isConnected) {
+            try {
+                const agentData = await HardwareAgent.getHardware();
+                if (!agentData.error) {
+                    info = this.mergeDeviceInfo(agentData);
+                    hardwareSource = HardwareAgent.SOURCES.HARDWARE_AGENT;
+                    console.log('Using Hardware Agent data');
+                }
+            } catch (error) {
+                console.log('Failed to get Hardware Agent data, using browser fallback:', error);
+            }
+        }
+
+        // If Agent not available or failed, use browser detection
+        if (Object.keys(info).length === 0) {
+            info = this.detectBrowserDeviceInfo();
+            hardwareSource = HardwareAgent.SOURCES.BROWSER;
+            console.log('Using Browser detection');
+        }
+
+        // Add metadata
+        info.hardwareSource = hardwareSource;
+        info.hardwareCapturedAt = new Date().toISOString();
+
+        return info;
+    },
+
+    // Merge hardware agent data with additional browser data
+    mergeDeviceInfo: function(agentData) {
+        const info = {
+            // Computer info from agent
+            computer: agentData.computer,
+            operatingSystem: agentData.operatingSystem,
+            cpu: agentData.cpu,
+            memory: agentData.memory,
+            gpu: agentData.gpu,
+            storage: agentData.storage,
+            battery: agentData.battery,
+            network: agentData.network,
+            motherboard: agentData.motherboard,
+
+            // Browser-specific data (always from browser)
+            screen: {
+                width: screen.width,
+                height: screen.height,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth,
+                pixelDepth: screen.pixelDepth,
+                pixelRatio: window.devicePixelRatio,
+                orientation: screen.orientation?.type || 'غير متاح'
+            },
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            browser: this.detectBrowser()
+        };
+
+        return info;
+    },
+
+    // Detect device info from browser (fallback)
+    detectBrowserDeviceInfo: function() {
         const info = {};
-        
-        // نظام التشغيل
-        info.os = this.detectOS();
-        
-        // المتصفح
-        info.browser = this.detectBrowser();
-        
-        // الشاشة
+
+        // Computer info (limited from browser)
+        info.computer = {
+            manufacturer: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            model: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            deviceType: HardwareAgent.createInfoField(this.detectLaptopModel(), HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.MEDIUM),
+            serialNumber: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE)
+        };
+
+        // Operating system
+        info.operatingSystem = {
+            name: HardwareAgent.createInfoField(this.detectOS(), HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.HIGH),
+            version: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            build: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE)
+        };
+
+        // CPU
+        info.cpu = {
+            name: HardwareAgent.createInfoField(this.detectCPUModel(), HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.LOW),
+            manufacturer: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            cores: HardwareAgent.createInfoField(navigator.hardwareConcurrency, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.HIGH),
+            logicalProcessors: HardwareAgent.createInfoField(navigator.hardwareConcurrency, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.HIGH),
+            maxClockMHz: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE)
+        };
+
+        // Memory
+        info.memory = {
+            totalBytes: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            totalGB: HardwareAgent.createInfoField(navigator.deviceMemory, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.MEDIUM),
+            modules: []
+        };
+
+        // GPU
+        info.gpu = [this.detectGPU()];
+
+        // Storage (limited from browser)
+        info.storage = [];
+        info.storageWarning = 'المتصفح لا يستطيع قراءة سعة الهارد الحقيقية';
+
+        // Battery
+        const batteryData = await this.detectBattery();
+        info.battery = {
+            present: HardwareAgent.createInfoField(batteryData.available, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.HIGH),
+            percentage: HardwareAgent.createInfoField(batteryData.level, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.HIGH),
+            charging: HardwareAgent.createInfoField(batteryData.charging, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.HIGH),
+            designCapacityWh: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            fullChargeCapacityWh: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE),
+            cycleCount: HardwareAgent.createInfoField(null, HardwareAgent.SOURCES.BROWSER, HardwareAgent.CONFIDENCE.NONE)
+        };
+
+        // Network
+        info.network = [this.detectNetwork()];
+
+        // Browser-specific data
         info.screen = {
             width: screen.width,
             height: screen.height,
@@ -143,35 +259,14 @@ const DiagnosticEngine = {
             pixelRatio: window.devicePixelRatio,
             orientation: screen.orientation?.type || 'غير متاح'
         };
-        
-        // Viewport
+
         info.viewport = {
             width: window.innerWidth,
             height: window.innerHeight
         };
-        
-        // المعالج
-        info.cpu = {
-            cores: navigator.hardwareConcurrency || 'غير متاح',
-            architecture: navigator.userAgentData?.platform || navigator.platform,
-            model: this.detectCPUModel()
-        };
 
-        // نوع اللابتوب (محدود)
-        info.laptopModel = this.detectLaptopModel();
-        
-        // الذاكرة
-        info.ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'غير متاح';
-        
-        // GPU
-        info.gpu = this.detectGPU();
-        
-        // البطارية
-        info.battery = await this.detectBattery();
-        
-        // الشبكة
-        info.network = this.detectNetwork();
-        
+        info.browser = this.detectBrowser();
+
         return info;
     },
     
