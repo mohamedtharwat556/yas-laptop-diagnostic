@@ -10,12 +10,12 @@ namespace YAS.HardwareAgent.Tests;
 /// <summary>
 /// Test 3, 4, 5: Hardware endpoint tests
 /// </summary>
-public class HardwareEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class HardwareEndpointTests : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public HardwareEndpointTests(WebApplicationFactory<Program> factory)
+    public HardwareEndpointTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();

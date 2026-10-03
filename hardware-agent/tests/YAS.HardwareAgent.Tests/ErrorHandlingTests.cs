@@ -10,12 +10,12 @@ namespace YAS.HardwareAgent.Tests;
 /// <summary>
 /// Test 6: Error handling - one component failure should not crash entire API
 /// </summary>
-public class ErrorHandlingTests : IClassFixture<WebApplicationFactory<Program>>
+public class ErrorHandlingTests : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public ErrorHandlingTests(WebApplicationFactory<Program> factory)
+    public ErrorHandlingTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();
