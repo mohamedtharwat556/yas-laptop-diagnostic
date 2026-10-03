@@ -8,66 +8,77 @@ const DiagnosticEngine = {
             id: 'screen',
             name: 'فحص الشاشة',
             type: 'interactive',
+            category: TestCategories.INTERACTIVE,
             run: this.testScreen
         },
         {
             id: 'keyboard',
             name: 'فحص لوحة المفاتيح',
             type: 'interactive',
+            category: TestCategories.INTERACTIVE,
             run: this.testKeyboard
         },
         {
             id: 'mouse',
             name: 'فحص الماوس',
             type: 'interactive',
+            category: TestCategories.INTERACTIVE,
             run: this.testMouse
         },
         {
             id: 'camera',
             name: 'فحص الكاميرا',
             type: 'permission',
+            category: TestCategories.INTERACTIVE,
             run: this.testCamera
         },
         {
             id: 'microphone',
             name: 'فحص الميكروفون',
             type: 'permission',
+            category: TestCategories.INTERACTIVE,
             run: this.testMicrophone
         },
         {
             id: 'speaker',
             name: 'فحص السماعات',
             type: 'interactive',
+            category: TestCategories.INTERACTIVE,
             run: this.testSpeaker
         },
         {
             id: 'network',
             name: 'فحص الشبكة',
             type: 'automatic',
+            category: TestCategories.SYSTEM,
             run: this.testNetwork
         },
         {
             id: 'battery',
             name: 'فحص البطارية',
             type: 'automatic',
+            category: TestCategories.SYSTEM,
             run: this.testBattery
         },
         {
             id: 'performance',
             name: 'فحص الأداء',
             type: 'automatic',
+            category: TestCategories.SYSTEM,
             run: this.testPerformance
         },
         {
             id: 'storage',
             name: 'فحص التخزين',
             type: 'automatic',
+            category: TestCategories.SYSTEM,
             run: this.testStorage
         },
         {
             id: 'gpu',
             name: 'فحص الرسوميات',
             type: 'automatic',
+            category: TestCategories.SYSTEM,
             run: this.testGPU
         }
     ],
@@ -486,6 +497,7 @@ const DiagnosticEngine = {
         return new Promise((resolve) => {
             const colors = ['black', 'white', 'red', 'green', 'blue'];
             let currentColorIndex = 0;
+            const startedAt = new Date().toISOString();
 
             // إخفاء container التفاعلي وجعل الشاشة full screen
             const container = document.getElementById('interactiveTestContainer');
@@ -539,20 +551,34 @@ const DiagnosticEngine = {
                     overlay.appendChild(questionDiv);
 
                     document.getElementById('screenNoProblemBtn').addEventListener('click', () => {
+                        const completedAt = new Date().toISOString();
                         overlay.remove();
                         container.style.display = 'block';
                         resolve({
                             status: 'passed',
-                            details: 'Visual confirmation: لا توجد مشاكل ظاهرة'
+                            details: 'Visual confirmation: لا توجد مشاكل ظاهرة',
+                            category: TestCategories.INTERACTIVE,
+                            startedAt: startedAt,
+                            completedAt: completedAt,
+                            userConfirmation: true,
+                            evidence: 'User confirmed no screen issues',
+                            limitations: []
                         });
                     });
 
                     document.getElementById('screenProblemBtn').addEventListener('click', () => {
+                        const completedAt = new Date().toISOString();
                         overlay.remove();
                         container.style.display = 'block';
                         resolve({
                             status: 'warning',
-                            details: 'المستخدم أشار إلى وجود مشاكل في الشاشة'
+                            details: 'المستخدم أشار إلى وجود مشاكل في الشاشة',
+                            category: TestCategories.INTERACTIVE,
+                            startedAt: startedAt,
+                            completedAt: completedAt,
+                            userConfirmation: true,
+                            evidence: 'User reported screen issues',
+                            limitations: []
                         });
                     });
                 } else {
@@ -1351,12 +1377,20 @@ const DiagnosticEngine = {
     // تشغيل اختبار الشبكة
     runNetworkTest: async function() {
         return new Promise((resolve) => {
+            const startedAt = new Date().toISOString();
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            
+
             if (!connection) {
+                const completedAt = new Date().toISOString();
                 resolve({
                     status: 'limited',
-                    details: 'Network API غير متاح في هذا المتصفح'
+                    details: 'Network API غير متاح في هذا المتصفح',
+                    category: TestCategories.SYSTEM,
+                    startedAt: startedAt,
+                    completedAt: completedAt,
+                    userConfirmation: false,
+                    evidence: 'navigator.connection API not available',
+                    limitations: ['Network API غير متاح في هذا المتصفح']
                 });
                 return;
             }
@@ -1369,17 +1403,31 @@ const DiagnosticEngine = {
                 saveData: connection.saveData ? 'نعم' : 'لا'
             };
 
+            const completedAt = new Date().toISOString();
+
             if (!navigator.onLine) {
                 resolve({
                     status: 'warning',
                     details: 'الجهاز غير متصل بالإنترنت حالياً',
-                    data: networkInfo
+                    category: TestCategories.SYSTEM,
+                    startedAt: startedAt,
+                    completedAt: completedAt,
+                    data: networkInfo,
+                    userConfirmation: false,
+                    evidence: 'navigator.onLine = false',
+                    limitations: []
                 });
             } else {
                 resolve({
                     status: 'passed',
                     details: 'الاتصال متاح - نوع: ' + networkInfo.type + ', سرعة: ' + networkInfo.downlink,
-                    data: networkInfo
+                    category: TestCategories.SYSTEM,
+                    startedAt: startedAt,
+                    completedAt: completedAt,
+                    data: networkInfo,
+                    userConfirmation: false,
+                    evidence: 'navigator.onLine = true',
+                    limitations: []
                 });
             }
         });

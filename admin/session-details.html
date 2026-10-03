@@ -148,6 +148,44 @@
                         </div>
                     </div>
 
+                    <!-- Technician Summary -->
+                    <div class="dashboard-section">
+                        <h2 class="section-title">ملخص الفني</h2>
+                        <div class="technician-summary" id="technicianSummary">
+                            <!-- Technician summary will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Detected Issues -->
+                    <div class="dashboard-section" id="issuesSection" style="display: none;">
+                        <h2 class="section-title">المشاكل المكتشفة</h2>
+                        <div class="issues-list" id="issuesList">
+                            <!-- Issues will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Test Timeline -->
+                    <div class="dashboard-section" id="timelineSection" style="display: none;">
+                        <h2 class="section-title">جدول الفحص</h2>
+                        <div class="test-timeline" id="testTimeline">
+                            <!-- Timeline will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Technician Notes -->
+                    <div class="dashboard-section">
+                        <h2 class="section-title">ملاحظات الفني</h2>
+                        <div class="technician-notes-section">
+                            <div class="technician-notes-list" id="technicianNotesList">
+                                <!-- Notes will be populated by JavaScript -->
+                            </div>
+                            <div class="technician-notes-input">
+                                <textarea id="newTechnicianNote" placeholder="أضف ملاحظة فنية..." rows="3"></textarea>
+                                <button class="btn btn-primary" id="addTechnicianNoteBtn">إضافة ملاحظة</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Test Results -->
                     <div class="dashboard-section">
                         <h2 class="section-title">نتائج الاختبارات</h2>

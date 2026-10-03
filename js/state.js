@@ -1,6 +1,33 @@
 // YAS Laptop Diagnostic System - State Management
 // هذا الملف يحتوي على إدارة حالة التطبيق
 
+// Categories for tests
+const TestCategories = {
+    INTERACTIVE: 'interactive',
+    SYSTEM: 'system',
+    DEVICE_INFO: 'device_info'
+};
+
+// Valid test statuses
+const TestStatus = {
+    PASS: 'pass',
+    WARNING: 'warning',
+    FAILED: 'failed',
+    LIMITED: 'limited',
+    NOT_AVAILABLE: 'not_available',
+    PENDING: 'pending',
+    RUNNING: 'running',
+    CANCELLED: 'cancelled'
+};
+
+// Severity levels for issues
+const IssueSeverity = {
+    INFO: 'info',
+    LOW: 'low',
+    MEDIUM: 'medium',
+    HIGH: 'high'
+};
+
 const AppState = {
     // Mock Data - بيانات تجريبية للعرض فقط
     stats: {
@@ -9,11 +36,11 @@ const AppState = {
         completedSessions: 0,
         needsReview: 0
     },
-    
+
     recentSessions: [],
-    
+
     currentSession: null,
-    
+
     // إحصائيات الفحوصات
     testResults: {},
     
@@ -48,16 +75,17 @@ const AppState = {
             },
             status: 'active',
             startedAt: new Date().toISOString(),
-            completedAt: null
+            completedAt: null,
+            technicianNotes: []
         };
-        
+
         this.recentSessions.unshift(session);
         this.currentSession = session;
         this.updateStats();
-        
+
         // حفظ في localStorage للاستخدام بين الصفحات
         this.saveToLocalStorage();
-        
+
         return session;
     },
     
@@ -74,15 +102,41 @@ const AppState = {
         }
     },
     
-    // حفظ نتيجة اختبار
-    saveTestResult: function(testName, result) {
+    // حفظ نتيجة اختبار - Normalized Model
+    saveTestResult: function(testId, result) {
         if (this.currentSession) {
-            this.currentSession.tests[testName] = result;
-            this.testResults[testName] = result;
-            
+            const startTime = Date.now();
+
+            // Normalized test result model
+            const normalizedResult = {
+                id: testId,
+                name: result.name || testId,
+                category: result.category || TestCategories.SYSTEM,
+                status: result.status || TestStatus.NOT_AVAILABLE,
+                startedAt: result.startedAt || new Date().toISOString(),
+                completedAt: result.completedAt || new Date().toISOString(),
+                duration: result.duration || 0,
+                summary: result.summary || result.details || '',
+                details: result.details || '',
+                data: result.data || {},
+                limitations: result.limitations || [],
+                evidence: result.evidence || null,
+                userConfirmation: result.userConfirmation || false
+            };
+
+            // Calculate duration if not provided
+            if (!result.duration && result.startedAt && result.completedAt) {
+                const start = new Date(result.startedAt).getTime();
+                const end = new Date(result.completedAt).getTime();
+                normalizedResult.duration = end - start;
+            }
+
+            this.currentSession.tests[testId] = normalizedResult;
+            this.testResults[testId] = normalizedResult;
+
             // تحديث الملخص
-            this.updateSummary(result);
-            
+            this.updateSummary(normalizedResult);
+
             this.saveToLocalStorage();
         }
     },
@@ -94,22 +148,28 @@ const AppState = {
         const summary = this.currentSession.summary;
 
         switch(result.status) {
-            case 'passed':
+            case TestStatus.PASS:
+            case 'passed': // For backward compatibility
                 summary.passed++;
                 break;
-            case 'warning':
+            case TestStatus.WARNING:
+            case 'warning': // For backward compatibility
                 summary.warning++;
                 break;
-            case 'failed':
+            case TestStatus.FAILED:
+            case 'failed': // For backward compatibility
                 summary.failed++;
                 break;
-            case 'limited':
+            case TestStatus.LIMITED:
+            case 'limited': // For backward compatibility
                 summary.limited++;
                 break;
-            case 'not_available':
+            case TestStatus.NOT_AVAILABLE:
+            case 'not_available': // For backward compatibility
                 summary.notAvailable++;
                 break;
-            case 'cancelled':
+            case TestStatus.CANCELLED:
+            case 'cancelled': // For backward compatibility
                 // لا نضيف للمجموع - المستخدم ألغى الاختبار
                 break;
         }
@@ -234,6 +294,250 @@ const AppState = {
         this.testResults = {};
         localStorage.removeItem('diagnosticSessions');
         localStorage.removeItem('currentSession');
+    }
+};
+
+// Diagnostic Summary Engine
+const DiagnosticSummaryEngine = {
+    // Calculate overall status
+    calculateOverallStatus: function(session) {
+        if (!session || !session.tests) {
+            return 'PENDING';
+        }
+
+        const tests = Object.values(session.tests);
+        if (tests.length === 0) {
+            return 'PENDING';
+        }
+
+        const summary = session.summary;
+
+        // Priority: FAILED > WARNING > LIMITED/NOT_AVAILABLE > PASS
+        if (summary.failed > 0) {
+            return 'COMPLETED_WITH_FAILURES';
+        }
+
+        if (summary.warning > 0) {
+            return 'COMPLETED_WITH_WARNINGS';
+        }
+
+        if (summary.limited > 0 || summary.notAvailable > 0) {
+            return 'COMPLETED_WITH_LIMITATIONS';
+        }
+
+        if (summary.passed > 0) {
+            return 'COMPLETED';
+        }
+
+        return 'PARTIALLY_COMPLETED';
+    },
+
+    // Get total test count
+    getTotalTests: function(session) {
+        if (!session || !session.tests) return 0;
+        return Object.keys(session.tests).length;
+    },
+
+    // Extract issues from test results
+    extractIssues: function(session) {
+        if (!session || !session.tests) return [];
+
+        const issues = [];
+        const tests = Object.values(session.tests);
+
+        tests.forEach(test => {
+            if (test.status === TestStatus.FAILED || test.status === 'failed') {
+                issues.push({
+                    type: this.getIssueType(test.id),
+                    severity: IssueSeverity.HIGH,
+                    title: `مشكلة في ${test.name}`,
+                    description: test.details || 'فشل الاختبار',
+                    sourceTestId: test.id
+                });
+            } else if (test.status === TestStatus.WARNING || test.status === 'warning') {
+                issues.push({
+                    type: this.getIssueType(test.id),
+                    severity: IssueSeverity.MEDIUM,
+                    title: `ملاحظة في ${test.name}`,
+                    description: test.details || 'تحذير من الاختبار',
+                    sourceTestId: test.id
+                });
+            } else if (test.status === TestStatus.LIMITED || test.status === 'limited') {
+                issues.push({
+                    type: this.getIssueType(test.id),
+                    severity: IssueSeverity.INFO,
+                    title: `اختبار محدود: ${test.name}`,
+                    description: test.details || 'الاختبار محدود بسبب قيود المتصفح',
+                    sourceTestId: test.id
+                });
+            } else if (test.status === TestStatus.NOT_AVAILABLE || test.status === 'not_available') {
+                issues.push({
+                    type: this.getIssueType(test.id),
+                    severity: IssueSeverity.INFO,
+                    title: `اختبار غير متاح: ${test.name}`,
+                    description: test.details || 'الاختبار غير متاح في هذا المتصفح',
+                    sourceTestId: test.id
+                });
+            }
+        });
+
+        return issues;
+    },
+
+    // Get issue type based on test ID
+    getIssueType: function(testId) {
+        const typeMap = {
+            'screen': 'display',
+            'keyboard': 'input',
+            'mouse': 'input',
+            'camera': 'media',
+            'microphone': 'media',
+            'speaker': 'audio',
+            'network': 'network',
+            'battery': 'power',
+            'performance': 'performance',
+            'storage': 'storage',
+            'gpu': 'graphics'
+        };
+        return typeMap[testId] || 'general';
+    },
+
+    // Collect all limitations
+    collectLimitations: function(session) {
+        if (!session || !session.tests) return [];
+
+        const limitations = new Set();
+        const tests = Object.values(session.tests);
+
+        tests.forEach(test => {
+            if (test.limitations && Array.isArray(test.limitations)) {
+                test.limitations.forEach(limit => limitations.add(limit));
+            }
+
+            // Add common limitations based on status
+            if (test.status === TestStatus.LIMITED || test.status === 'limited') {
+                if (test.id === 'storage') {
+                    limitations.add('المتصفح لا يستطيع تحديد نوع الهارد (SSD/HDD) بسبب قيود الأمان');
+                }
+                if (test.id === 'gpu') {
+                    limitations.add('معلومات GPU Renderer محدودة بسبب قيود الخصوصية');
+                }
+                if (test.id === 'battery') {
+                    limitations.add('Battery API غير متاح في هذا المتصفح');
+                }
+                if (test.id === 'network') {
+                    limitations.add('Network API غير متاح في هذا المتصفح');
+                }
+            }
+        });
+
+        return Array.from(limitations);
+    },
+
+    // Generate customer summary
+    generateCustomerSummary: function(session) {
+        if (!session) return '';
+
+        const totalTests = this.getTotalTests(session);
+        const summary = session.summary;
+        const overallStatus = this.calculateOverallStatus(session);
+
+        let text = `تم إكمال الفحص\n`;
+        text += `تم تنفيذ ${totalTests} اختبار.\n\n`;
+
+        if (summary.passed > 0) {
+            text += `✓ ${summary.passed} اختبارات ناجحة\n`;
+        }
+        if (summary.warning > 0) {
+            text += `⚠ ${summary.warning} ملاحظة\n`;
+        }
+        if (summary.failed > 0) {
+            text += `✕ ${summary.failed} مشكلة\n`;
+        }
+        if (summary.limited > 0) {
+            text += `ℹ ${summary.limited} اختبار محدود\n`;
+        }
+        if (summary.notAvailable > 0) {
+            text += `ℹ ${summary.notAvailable} اختبار غير متاح\n`;
+        }
+
+        return text;
+    },
+
+    // Generate technician summary
+    generateTechnicianSummary: function(session) {
+        if (!session) return null;
+
+        return {
+            overallStatus: this.calculateOverallStatus(session),
+            totalTests: this.getTotalTests(session),
+            passed: session.summary.passed,
+            warnings: session.summary.warning,
+            failed: session.summary.failed,
+            limited: session.summary.limited,
+            notAvailable: session.summary.notAvailable,
+            issues: this.extractIssues(session),
+            limitations: this.collectLimitations(session)
+        };
+    },
+
+    // Format duration for display
+    formatDuration: function(ms) {
+        if (!ms || ms < 0) return 'غير متاح';
+
+        if (ms < 1000) {
+            return `${ms} ms`;
+        } else if (ms < 60000) {
+            const seconds = (ms / 1000).toFixed(1);
+            return `${seconds} ثانية`;
+        } else {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = ((ms % 60000) / 1000).toFixed(0);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    },
+
+    // Get test timeline
+    getTestTimeline: function(session) {
+        if (!session || !session.tests) return [];
+
+        const timeline = [];
+        const tests = Object.values(session.tests);
+
+        // Add session start
+        if (session.startedAt) {
+            timeline.push({
+                timestamp: session.startedAt,
+                event: 'بدأ الفحص',
+                type: 'session'
+            });
+        }
+
+        // Add each test
+        tests.forEach(test => {
+            if (test.startedAt) {
+                timeline.push({
+                    timestamp: test.startedAt,
+                    event: test.name,
+                    type: 'test_start',
+                    testId: test.id
+                });
+            }
+        });
+
+        // Add session completion
+        if (session.completedAt) {
+            timeline.push({
+                timestamp: session.completedAt,
+                event: 'اكتمل الفحص',
+                type: 'session'
+            });
+        }
+
+        // Sort by timestamp
+        timeline.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+        return timeline;
     }
 };
 

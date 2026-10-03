@@ -184,28 +184,47 @@ const Admin = {
         // الحصول على معرف الجلسة من URL
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('id');
-        
+
         if (!sessionId) {
             window.location.href = 'sessions.html';
             return;
         }
-        
+
         const session = AppState.recentSessions.find(s => s.sessionId == sessionId);
-        
+
         if (!session) {
             window.location.href = 'sessions.html';
             return;
         }
-        
+
+        // Use Diagnostic Summary Engine
+        const summary = DiagnosticSummaryEngine.generateTechnicianSummary(session);
+        const timeline = DiagnosticSummaryEngine.getTestTimeline(session);
+
         // عرض بيانات العميل
         document.getElementById('detailCustomerName').textContent = session.customer.name;
         document.getElementById('detailCustomerPhone').textContent = session.customer.phone;
         document.getElementById('detailServiceOrder').textContent = session.customer.serviceOrder || '-';
         document.getElementById('detailProblemDescription').textContent = session.customer.problem;
-        
+
         // عرض معلومات الجهاز
         this.displayDeviceInfo(session.deviceInfo);
-        
+
+        // عرض Technician Summary
+        this.displayTechnicianSummary(summary);
+
+        // عرض Detected Issues
+        this.displayIssues(summary.issues);
+
+        // عرض Timeline
+        this.displayTimeline(timeline);
+
+        // عرض Technician Notes
+        this.displayTechnicianNotes(session);
+
+        // Setup add note button
+        this.setupTechnicianNotes(session);
+
         // عرض نتائج الاختبارات
         this.displayTestResults(session.tests);
     },
@@ -322,6 +341,182 @@ const Admin = {
 
         html += '</div>';
         container.innerHTML = html;
+    },
+
+    // عرض Technician Summary
+    displayTechnicianSummary: function(summary) {
+        const container = document.getElementById('technicianSummary');
+
+        if (!container) return;
+
+        const statusMap = {
+            'COMPLETED': { class: 'badge-success', text: 'مكتمل' },
+            'COMPLETED_WITH_WARNINGS': { class: 'badge-warning', text: 'مكتمل مع تحذيرات' },
+            'COMPLETED_WITH_FAILURES': { class: 'badge-danger', text: 'مكتمل مع مشاكل' },
+            'COMPLETED_WITH_LIMITATIONS': { class: 'badge-warning', text: 'مكتمل مع قيود' },
+            'PARTIALLY_COMPLETED': { class: 'badge-neutral', text: 'غير مكتمل' }
+        };
+
+        const status = statusMap[summary.overallStatus] || statusMap['PARTIALLY_COMPLETED'];
+
+        let html = `
+            <div class="technician-summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">الحالة العامة:</span>
+                    <span class="badge ${status.class}">${status.text}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">إجمالي الاختبارات:</span>
+                    <span class="summary-value">${summary.totalTests}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">نجح:</span>
+                    <span class="summary-value text-success">${summary.passed}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">تحذيرات:</span>
+                    <span class="summary-value text-warning">${summary.warnings}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">فشل:</span>
+                    <span class="summary-value text-danger">${summary.failed}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">محدود:</span>
+                    <span class="summary-value text-warning">${summary.limited}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">غير متاح:</span>
+                    <span class="summary-value text-neutral">${summary.notAvailable}</span>
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+    },
+
+    // عرض Issues
+    displayIssues: function(issues) {
+        const container = document.getElementById('issuesList');
+        const section = document.getElementById('issuesSection');
+
+        if (!container || !section) return;
+
+        if (!issues || issues.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+
+        const severityMap = {
+            'info': { class: 'badge-neutral', text: 'معلومة' },
+            'low': { class: 'badge-warning', text: 'منخفض' },
+            'medium': { class: 'badge-warning', text: 'متوسط' },
+            'high': { class: 'badge-danger', text: 'عالي' }
+        };
+
+        let html = '';
+        issues.forEach(issue => {
+            const severity = severityMap[issue.severity] || severityMap['info'];
+            html += `
+                <div class="issue-item">
+                    <div class="issue-header">
+                        <span class="issue-title">${issue.title}</span>
+                        <span class="badge ${severity.class}">${severity.text}</span>
+                    </div>
+                    <div class="issue-description">${issue.description}</div>
+                    <div class="issue-source">المصدر: ${issue.sourceTestId}</div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    },
+
+    // عرض Timeline
+    displayTimeline: function(timeline) {
+        const container = document.getElementById('testTimeline');
+        const section = document.getElementById('timelineSection');
+
+        if (!container || !section) return;
+
+        if (!timeline || timeline.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+
+        let html = '<div class="timeline-list">';
+        timeline.forEach(item => {
+            const time = new Date(item.timestamp).toLocaleTimeString('ar-SA');
+            html += `
+                <div class="timeline-item">
+                    <span class="timeline-time">${time}</span>
+                    <span class="timeline-event">${item.event}</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+    },
+
+    // عرض Technician Notes
+    displayTechnicianNotes: function(session) {
+        const container = document.getElementById('technicianNotesList');
+
+        if (!container) return;
+
+        const notes = session.technicianNotes || [];
+
+        if (notes.length === 0) {
+            container.innerHTML = '<p class="empty-state">لا توجد ملاحظات</p>';
+            return;
+        }
+
+        let html = '';
+        notes.forEach(note => {
+            const time = new Date(note.timestamp).toLocaleString('ar-SA');
+            html += `
+                <div class="technician-note-item">
+                    <div class="note-header">
+                        <span class="note-time">${time}</span>
+                    </div>
+                    <div class="note-content">${note.content}</div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    },
+
+    // Setup Technician Notes Input
+    setupTechnicianNotes: function(session) {
+        const input = document.getElementById('newTechnicianNote');
+        const btn = document.getElementById('addTechnicianNoteBtn');
+
+        if (!input || !btn) return;
+
+        btn.addEventListener('click', () => {
+            const content = input.value.trim();
+            if (!content) return;
+
+            if (!session.technicianNotes) {
+                session.technicianNotes = [];
+            }
+
+            session.technicianNotes.push({
+                content: content,
+                timestamp: new Date().toISOString()
+            });
+
+            AppState.saveToLocalStorage();
+
+            input.value = '';
+            this.displayTechnicianNotes(session);
+        });
     }
 };
 

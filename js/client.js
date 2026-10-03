@@ -111,43 +111,61 @@ const Client = {
     
     // عرض النتائج
     displayResults: function(session) {
+        // Use Diagnostic Summary Engine
+        const summary = DiagnosticSummaryEngine.generateTechnicianSummary(session);
+        const customerSummary = DiagnosticSummaryEngine.generateCustomerSummary(session);
+
         // تحديث الملخص
-        document.getElementById('passedTests').textContent = session.summary.passed;
-        document.getElementById('failedTests').textContent = session.summary.failed;
-        document.getElementById('warningTests').textContent = session.summary.warning;
-        document.getElementById('limitedTests').textContent = session.summary.limited;
-        document.getElementById('notAvailableTests').textContent = session.summary.notAvailable;
+        document.getElementById('passedTests').textContent = summary.passed;
+        document.getElementById('failedTests').textContent = summary.failed;
+        document.getElementById('warningTests').textContent = summary.warnings;
+        document.getElementById('limitedTests').textContent = summary.limited;
+        document.getElementById('notAvailableTests').textContent = summary.notAvailable;
 
         // تحديث حالة النتيجة
-        this.updateResultStatus(session);
+        this.updateResultStatus(summary);
 
         // عرض معلومات الجهاز
         this.displayDeviceInfo(session.deviceInfo);
 
         // عرض نتائج الاختبارات
         this.displayTestResults(session.tests);
+
+        // عرض Limitations
+        this.displayLimitations(summary.limitations);
+
+        // عرض Customer Summary
+        this.displayCustomerSummary(customerSummary);
     },
 
     // تحديث حالة النتيجة
-    updateResultStatus: function(session) {
+    updateResultStatus: function(summary) {
         const statusEl = document.getElementById('resultStatus');
-        const summary = session.summary;
 
-        if (summary.failed > 0) {
-            statusEl.textContent = 'تم إكمال الفحص - توجد مشاكل';
-            statusEl.className = 'result-status result-status-failed';
-        } else if (summary.warning > 0) {
-            statusEl.textContent = 'تم إكمال الفحص - توجد تحذيرات';
-            statusEl.className = 'result-status result-status-warning';
-        } else if (summary.limited > 0) {
-            statusEl.textContent = 'تم إكمال الفحص - بعض الاختبارات محدودة';
-            statusEl.className = 'result-status result-status-warning';
-        } else if (summary.passed > 0) {
-            statusEl.textContent = 'تم إكمال الفحص بنجاح';
-            statusEl.className = 'result-status result-status-success';
-        } else {
-            statusEl.textContent = 'الفحص غير مكتمل';
-            statusEl.className = 'result-status result-status-pending';
+        switch(summary.overallStatus) {
+            case 'COMPLETED_WITH_FAILURES':
+                statusEl.textContent = 'تم إكمال الفحص - توجد مشاكل';
+                statusEl.className = 'result-status result-status-failed';
+                break;
+            case 'COMPLETED_WITH_WARNINGS':
+                statusEl.textContent = 'تم إكمال الفحص - توجد تحذيرات';
+                statusEl.className = 'result-status result-status-warning';
+                break;
+            case 'COMPLETED_WITH_LIMITATIONS':
+                statusEl.textContent = 'تم إكمال الفحص - بعض الاختبارات محدودة';
+                statusEl.className = 'result-status result-status-warning';
+                break;
+            case 'COMPLETED':
+                statusEl.textContent = 'تم إكمال الفحص بنجاح';
+                statusEl.className = 'result-status result-status-success';
+                break;
+            case 'PARTIALLY_COMPLETED':
+                statusEl.textContent = 'الفحص غير مكتمل';
+                statusEl.className = 'result-status result-status-pending';
+                break;
+            default:
+                statusEl.textContent = 'الفحص غير مكتمل';
+                statusEl.className = 'result-status result-status-pending';
         }
     },
     
@@ -344,6 +362,38 @@ const Client = {
         }
 
         container.innerHTML = html;
+    },
+
+    // عرض Limitations
+    displayLimitations: function(limitations) {
+        const container = document.getElementById('limitationsList');
+
+        if (!limitations || limitations.length === 0) {
+            if (container) {
+                container.style.display = 'none';
+            }
+            return;
+        }
+
+        if (container) {
+            container.style.display = 'block';
+            let html = '<h3 class="result-section-title">حدود الفحص</h3>';
+            html += '<ul class="limitations-list">';
+            limitations.forEach(limit => {
+                html += `<li class="limitation-item">${limit}</li>`;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+    },
+
+    // عرض Customer Summary
+    displayCustomerSummary: function(summary) {
+        const container = document.getElementById('customerSummary');
+
+        if (!container) return;
+
+        container.innerHTML = summary.replace(/\n/g, '<br>');
     }
 };
 
