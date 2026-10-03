@@ -3,8 +3,8 @@
 .env.local
 .env.*.local
 
-# Supabase configuration (contains credentials)
-js/supabaseConfig.js
+# Local Supabase config (contains credentials)
+js/supabaseConfig.local.js
 
 # Node modules (if added later)
 node_modules/
