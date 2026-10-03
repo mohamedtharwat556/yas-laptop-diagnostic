@@ -86,31 +86,37 @@ const DiagnosticEngine = {
     // بدء الفحص
     start: async function() {
         console.log('Diagnostic Engine - Starting...');
-        
+
         const session = AppState.getCurrentSession();
         if (!session) {
             console.error('No active session');
             window.location.href = 'index.html';
             return;
         }
-        
+
+        // تحديث حالة Hardware Agent
+        this.updateAgentStatus();
+
         // تحديث الحالة
         this.updateStatus('جاري جمع معلومات الجهاز...');
-        
+
         // جمع معلومات الجهاز
         const deviceInfo = await this.detectDeviceInfo();
         session.deviceInfo = deviceInfo;
         AppState.saveDeviceInfo(deviceInfo);
-        
+
         // عرض معلومات الجهاز
         this.displayDeviceInfo(deviceInfo);
-        
+
         // تحديث الحالة
         this.updateStatus('جاري إعداد الاختبارات...');
-        
+
         // عرض قائمة الاختبارات
         this.displayTestsList();
-        
+
+        // Setup refresh button
+        this.setupRefreshButton();
+
         // تشغيل الاختبارات
         this.updateStatus('جاري تشغيل الاختبارات...');
         await this.runTests();

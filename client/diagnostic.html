@@ -30,6 +30,17 @@
                     <p class="diagnostic-status" id="diagnosticStatus">جاري تحضير الفحص...</p>
                 </div>
 
+                <!-- Hardware Agent Status -->
+                <div class="hardware-agent-status" id="hardwareAgentStatus">
+                    <div class="agent-status-indicator" id="agentStatusIndicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">جاري التحقق من مساعد فحص الجهاز...</span>
+                    </div>
+                    <div class="agent-status-details" id="agentStatusDetails" style="display: none;">
+                        <span class="agent-detail">سيتم استخدام معلومات المتصفح المتاحة</span>
+                    </div>
+                </div>
+
                 <!-- Device Detection Section -->
                 <div class="device-detection-section">
                     <h2 class="section-title">اكتشاف الجهاز</h2>
@@ -76,6 +87,12 @@
 
                 <!-- Actions -->
                 <div class="diagnostic-actions" id="diagnosticActions" style="display: none;">
+                    <button class="btn btn-secondary btn-lg btn-full" id="refreshHardwareBtn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 4v5h5M16 16v-5h-5M4 4l3 3M16 16l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        تحديث معلومات الجهاز
+                    </button>
                     <button class="btn btn-primary btn-lg btn-full" id="viewResultsBtn">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -93,6 +110,7 @@
     </div>
 
     <script src="../js/state.js"></script>
+    <script src="../js/hardwareAgent.js"></script>
     <script src="../js/keyboard.js"></script>
     <script src="../js/diagnostic.js"></script>
 </body>

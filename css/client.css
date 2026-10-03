@@ -1166,6 +1166,64 @@
     line-height: 1.8;
 }
 
+/* Hardware Agent Status */
+.hardware-agent-status {
+    padding: var(--spacing-4);
+    background-color: var(--color-neutral-100);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-6);
+}
+
+.agent-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--color-neutral-400);
+    animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+    background-color: var(--color-success);
+    animation: none;
+}
+
+.status-dot.disconnected {
+    background-color: var(--color-neutral-400);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.status-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-neutral-700);
+    font-weight: var(--font-weight-medium);
+}
+
+.agent-status-details {
+    margin-top: var(--spacing-3);
+    padding-top: var(--spacing-3);
+    border-top: 1px solid var(--color-neutral-200);
+}
+
+.agent-detail {
+    font-size: var(--font-size-xs);
+    color: var(--color-neutral-600);
+}
+
 /* Responsive Client */
 @media (max-width: 768px) {
     .client-main {
