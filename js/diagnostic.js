@@ -153,7 +153,7 @@ const DiagnosticEngine = {
 
         // If Agent not available or failed, use browser detection
         if (Object.keys(info).length === 0) {
-            info = this.detectBrowserDeviceInfo();
+            info = await this.detectBrowserDeviceInfo();
             hardwareSource = HardwareAgent.SOURCES.BROWSER;
             console.log('Using Browser detection');
         }
@@ -201,7 +201,7 @@ const DiagnosticEngine = {
     },
 
     // Detect device info from browser (fallback)
-    detectBrowserDeviceInfo: function() {
+    detectBrowserDeviceInfo: async function() {
         const info = {};
 
         // Computer info (limited from browser)

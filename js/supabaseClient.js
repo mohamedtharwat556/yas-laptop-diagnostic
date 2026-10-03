@@ -8,7 +8,7 @@ const SUPABASE_CONFIG = {
 };
 
 // Supabase client (will be initialized when script loads)
-let supabase = null;
+let supabaseClient = null;
 
 /**
  * Initialize Supabase client
@@ -23,12 +23,12 @@ function initSupabase() {
     try {
         // Load Supabase from CDN
         if (window.supabase) {
-            supabase = window.supabase.createClient(
+            supabaseClient = window.supabase.createClient(
                 SUPABASE_CONFIG.url,
                 SUPABASE_CONFIG.anonKey
             );
             console.log('Supabase client initialized');
-            return supabase;
+            return supabaseClient;
         } else {
             console.warn('Supabase library not loaded');
             return null;
@@ -44,10 +44,10 @@ function initSupabase() {
  * @returns {Object|null} Supabase client or null
  */
 function getSupabase() {
-    if (!supabase) {
-        supabase = initSupabase();
+    if (!supabaseClient) {
+        supabaseClient = initSupabase();
     }
-    return supabase;
+    return supabaseClient;
 }
 
 /**
