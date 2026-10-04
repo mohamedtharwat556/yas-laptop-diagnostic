@@ -33,10 +33,21 @@ const Client = {
                 });
             }
             
-            // معالجة إرسال النموذج
+            // معالجة إرسال النموذج (only if not already handled by index.html Agent check)
             form.addEventListener('submit', async (e) => {
-                console.log('Form submit event triggered');
+                // Check if Agent pre-check already validated (flag set in index.html)
+                if (!window.agentPreCheckPassed) {
+                    // This is for direct access to client/index.html without Agent check
+                    e.preventDefault();
+                    console.log('[ClientForm] No pre-check detected - Agent validation required');
+                    alert('يجب التحقق من مساعد YAS أولاً');
+                    window.location.href = 'installation-required.html';
+                    return;
+                }
+
+                // Agent already verified, proceed with form submission
                 e.preventDefault();
+                console.log('[ClientForm] Agent pre-check passed, proceeding with form submission');
 
                 if (this.validateForm(form)) {
                     console.log('Form validation passed');

@@ -88,6 +88,55 @@
     <script src="../js/supabaseClient.js"></script>
     <script src="../js/sessionService.js"></script>
     <script src="../js/state.js"></script>
+    <script src="../js/hardwareAgent.js"></script>
+    <script src="../js/agentStateManager.js"></script>
     <script src="../js/client.js"></script>
+    <script>
+        // BATCH 6B-6: Mandatory Agent detection on client/index.html
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('[Client Index] Page loaded, checking Agent...');
+            
+            const form = document.getElementById('clientForm');
+            if (!form) return;
+
+            // Override form submit handler to check Agent first
+            const originalSubmitHandler = form.onsubmit;
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('[Client Index] Form submit - checking Agent first');
+
+                // Show checking status
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'جاري التحقق من مساعد YAS...';
+
+                try {
+                    const agentConnected = await HardwareAgent.detectAgent();
+                    
+                    if (!agentConnected) {
+                        console.log('[Client Index] Agent not connected - redirecting to installation');
+                        window.location.href = 'installation-required.html';
+                        return;
+                    }
+
+                    console.log('[Client Index] Agent connected - setting flag and re-submitting');
+                    submitBtn.innerHTML = 'جاري إنشاء الجلسة...';
+                    
+                    // Set flag to indicate Agent pre-check passed
+                    window.agentPreCheckPassed = true;
+                    
+                    // Re-submit the form (this time it will pass client.js validation)
+                    form.dispatchEvent(new Event('submit'));
+                } catch (error) {
+                    console.error('[Client Index] Agent check error:', error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    alert('حدث خطأ أثناء التحقق من مساعد YAS. يرجى المحاولة مجددًا.');
+                }
+            }, true); // Use capture phase to intercept before client.js handler
+        });
+    </script>
 </body>
 </html>
