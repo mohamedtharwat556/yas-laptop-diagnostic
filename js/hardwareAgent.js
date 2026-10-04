@@ -4,12 +4,13 @@
 
 // Agent States (State Machine)
 const AgentState = {
-    CHECKING: 'CHECKING',           // جاري التحقق
-    CONNECTED: 'CONNECTED',         // متصل
-    DISCONNECTED: 'DISCONNECTED',   // غير متصل
-    ERROR: 'ERROR',                 // خطأ
-    COLLECTING: 'COLLECTING',       // جاري قراءة المعلومات
-    COMPLETED: 'COMPLETED'          // اكتمل
+    CHECKING: 'CHECKING',                   // جاري التحقق
+    CONNECTED: 'CONNECTED',                 // متصل
+    DISCONNECTED: 'DISCONNECTED',           // غير متصل
+    PERMISSION_REQUIRED: 'PERMISSION_REQUIRED', // يحتاج صلاحية
+    ERROR: 'ERROR',                         // خطأ
+    COLLECTING: 'COLLECTING',               // جاري قراءة المعلومات
+    COMPLETED: 'COMPLETED'                  // اكتمل
 };
 
 // Agent State Messages (Arabic)
@@ -17,6 +18,7 @@ const AgentStateMessages = {
     CHECKING: 'جاري التحقق من مساعد فحص YAS...',
     CONNECTED: 'مساعد فحص YAS متصل',
     DISCONNECTED: 'مساعد فحص الجهاز غير متصل',
+    PERMISSION_REQUIRED: 'يحتاج الموقع إلى السماح بالوصول إلى مساعد الفحص المحلي',
     ERROR: 'تعذر الاتصال بمساعد فحص YAS',
     COLLECTING: 'جاري قراءة معلومات الجهاز...',
     COMPLETED: 'تم التعرف على معلومات الجهاز'
@@ -103,6 +105,7 @@ const HardwareAgent = {
     },
 
     // Check if agent is available (Health Check)
+    // Supports Loopback Network Access for HTTPS → localhost
     detectAgent: async function() {
         console.log('[Agent] Detecting agent...');
         this.setState(AgentState.CHECKING);
@@ -117,14 +120,24 @@ const HardwareAgent = {
                 controller.abort();
             }, HARDWARE_AGENT_CONFIG.timeout);
 
-            const response = await fetch(`${baseURL}/api/health`, {
+            // Build request with loopback support
+            const fetchOptions = {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 mode: 'cors',
                 signal: controller.signal
-            });
+            };
+
+            // Add targetAddressSpace for loopback network access
+            // This allows HTTPS sites to access http://127.0.0.1 safely
+            if (baseURL.includes('127.0.0.1') || baseURL.includes('localhost')) {
+                console.log('[Agent] Targeting loopback address space');
+                fetchOptions.targetAddressSpace = 'loopback';
+            }
+
+            const response = await fetch(`${baseURL}/api/health`, fetchOptions);
 
             clearTimeout(timeoutId);
 
@@ -140,9 +153,22 @@ const HardwareAgent = {
             }
         } catch (error) {
             console.log(`[Agent] Detection failed: ${error.message}`);
-            // Check if it's a CORS error or network error
-            if (error.message.includes('Failed to fetch')) {
-                console.log('[Agent] Likely CORS/Network issue - Agent may not be running or accessible');
+            
+            // Diagnose specific error
+            if (error.name === 'AbortError') {
+                console.log('[Agent] Timeout - Agent not responding');
+            } else if (error.message.includes('Failed to fetch')) {
+                // Could be: Local Network Access permission, CORS, or agent not running
+                console.log('[Agent] Fetch failed - Could be permission or network issue');
+                
+                // Check if we're on HTTPS
+                if (window.location.protocol === 'https:') {
+                    console.log('[Agent] Running on HTTPS - Local Network Access may require permission');
+                    this.setState(AgentState.PERMISSION_REQUIRED);
+                    return false;
+                }
+            } else if (error.message.includes('CORS')) {
+                console.log('[Agent] CORS error - Check agent CORS configuration');
             }
         }
 

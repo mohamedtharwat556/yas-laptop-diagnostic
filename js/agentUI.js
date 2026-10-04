@@ -91,6 +91,45 @@ const AgentUI = {
         this.updateUnavailableCardButtons();
     },
 
+    // Handle Permission Required state
+    onPermissionRequired: function() {
+        console.log('[AgentUI] Permission required for local network access');
+        
+        const card = document.getElementById('agentUnavailableCard');
+        if (card) {
+            card.style.display = 'block';
+            card.querySelector('.card-title').textContent = 'السماح بالوصول إلى مساعد الفحص';
+            card.querySelector('.card-description').textContent = 'يحتاج الموقع إلى الاتصال بمساعد الفحص المثبت على جهازك. يرجى السماح بهذا الاتصال.';
+            
+            const actions = card.querySelector('.card-actions');
+            if (actions) {
+                actions.innerHTML = `
+                    <button class="btn btn-primary btn-lg" onclick="AgentUI.performAgentDetection()">
+                        إعادة المحاولة
+                    </button>
+                `;
+            }
+        }
+        
+        this.updateStatusIndicator('permission-required');
+    },
+
+    // Handle Agent State Change
+    onAgentStateChange: function(event) {
+        console.log(`[AgentUI] State changed: ${event.newState}`);
+        
+        if (event.newState === 'PERMISSION_REQUIRED') {
+            this.onPermissionRequired();
+        }
+    },
+
+    // Handle Agent Disconnected
+    onAgentDisconnected: async function() {
+        console.log('[AgentUI] Agent disconnected');
+        this.agentConnected = false;
+
+        // Show unavailable card
+
     // Handle Agent State Change
     onAgentStateChange: function(event) {
         console.log(`[AgentUI] State changed: ${event.newState} - ${event.message}`);
@@ -98,6 +137,67 @@ const AgentUI = {
         // Update status indicator based on state
         const dot = document.querySelector('.agent-status-indicator .status-dot');
         const text = document.querySelector('.agent-status-indicator .status-text');
+        
+        if (!dot || !text) return;
+        
+        switch(event.newState) {
+            case 'CONNECTED':
+                dot.style.backgroundColor = '#10b981';
+                break;
+            case 'DISCONNECTED':
+                dot.style.backgroundColor = '#ef4444';
+                break;
+            case 'PERMISSION_REQUIRED':
+                dot.style.backgroundColor = '#f59e0b';
+                text.textContent = 'يحتاج الموقع إلى السماح بالوصول إلى مساعد الفحص المحلي';
+                this.showPermissionRequiredCard();
+                return;
+            case 'CHECKING':
+                dot.style.backgroundColor = '#3b82f6';
+                break;
+            case 'ERROR':
+                dot.style.backgroundColor = '#dc2626';
+                break;
+        }
+        
+        text.textContent = event.message;
+    },
+    
+    // Show permission required card and retry button
+    showPermissionRequiredCard: function() {
+        console.log('[AgentUI] Showing permission required card');
+        
+        const card = document.getElementById('agentUnavailableCard');
+        if (card) {
+            card.style.display = 'block';
+        }
+        
+        // Update card content
+        const title = card?.querySelector('.card-title');
+        const desc = card?.querySelector('.card-description');
+        
+        if (title) {
+            title.textContent = 'السماح بالوصول إلى مساعد الفحص';
+        }
+        
+        if (desc) {
+            desc.textContent = 'يحتاج الموقع إلى الاتصال بمساعد الفحص المثبت على هذا الجهاز لقراءة بيانات الجهاز الحقيقية. يرجى السماح بهذا الاتصال في نافذة الإذن.';
+        }
+        
+        // Clear old buttons
+        const actions = card?.querySelector('.card-actions');
+        if (actions) {
+            const retryBtn = document.createElement('button');
+            retryBtn.className = 'btn btn-primary btn-lg';
+            retryBtn.textContent = 'إعادة المحاولة';
+            retryBtn.onclick = () => {
+                this.performAgentDetection();
+            };
+            
+            actions.innerHTML = '';
+            actions.appendChild(retryBtn);
+        }
+    }
 
         if (dot && text) {
             text.textContent = event.message;
