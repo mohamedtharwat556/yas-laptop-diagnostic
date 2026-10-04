@@ -122,6 +122,7 @@ const HardwareAgent = {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                mode: 'cors',
                 signal: controller.signal
             });
 
@@ -139,6 +140,10 @@ const HardwareAgent = {
             }
         } catch (error) {
             console.log(`[Agent] Detection failed: ${error.message}`);
+            // Check if it's a CORS error or network error
+            if (error.message.includes('Failed to fetch')) {
+                console.log('[Agent] Likely CORS/Network issue - Agent may not be running or accessible');
+            }
         }
 
         this.isConnected = false;
