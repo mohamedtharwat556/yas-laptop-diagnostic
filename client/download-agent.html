@@ -520,41 +520,74 @@
 
             <!-- Installation Steps -->
             <div class="section">
-                <h2>📋 خطوات التثبيت</h2>
+                <h2>📋 خطوات التثبيت الصحيحة</h2>
+                <div class="error-box" style="text-align: right; margin-bottom: 20px;">
+                    <strong>⚠️ تثبيت يفشل؟</strong><br>
+                    اتبع هذه الخطوات بدقة:
+                </div>
                 <div class="installation-steps">
                     <div class="step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <h4>تحميل الملف</h4>
+                            <h4>📥 تحميل الملف</h4>
                             <p>اضغط على زر "تحميل المساعد" وانتظر انتهاء التحميل</p>
+                            <p style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                                ستحصل على ملف ZIP يحتوي على الملفات المطلوبة
+                            </p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <h4>تشغيل برنامج التثبيت</h4>
-                            <p>افتح ملف "Install.bat" وانقر عليه بزر الماوس الأيمن واختر "تشغيل كمسؤول"</p>
+                            <h4>📂 فك الضغط</h4>
+                            <p>افتح ملف ZIP واستخرج الملفات إلى مجلد</p>
+                            <p style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                                مثال: C:\Downloads\YAS-Agent
+                            </p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">3</div>
                         <div class="step-content">
-                            <h4>متابعة التثبيت</h4>
-                            <p>اتبع التعليمات على الشاشة. سيتم التثبيت تلقائياً في "C:\Program Files\YAS Hardware Agent"</p>
+                            <h4>⚙️ تشغيل برنامج التثبيت (الطريقة الأولى)</h4>
+                            <p><strong>الخيار A - الطريقة السهلة (BAT):</strong></p>
+                            <ul class="compatibility-list" style="margin-top: 8px;">
+                                <li>انقر بزر الماوس الأيمن على ملف "INSTALL-EASY.bat"</li>
+                                <li>اختر "تشغيل كمسؤول"</li>
+                                <li>اضغط على "نعم" إذا طلبت الصلاحيات</li>
+                                <li>اتبع التعليمات على الشاشة</li>
+                            </ul>
+                            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
+                                <strong>أو الخيار B - استخدام PowerShell:</strong>
+                            </p>
+                            <div class="code-block">
+Right-click → "Run PowerShell as Administrator"
+.\Install-YASHardwareAgent.ps1
+                            </div>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">4</div>
                         <div class="step-content">
-                            <h4>التحقق من التثبيت</h4>
-                            <p>بعد التثبيت، عد إلى هذه الصفحة واضغط "إعادة التحقق" للتأكد من أن المساعد يعمل</p>
+                            <h4>✓ التحقق من النجاح</h4>
+                            <p>بعد انتهاء التثبيت:</p>
+                            <ul class="compatibility-list" style="margin-top: 8px;">
+                                <li>ستظهر نافذة سوداء تقول "Installation Complete!"</li>
+                                <li>اضغط على Enter لإغلاق النافذة</li>
+                                <li>العد إلى هذه الصفحة واضغط "إعادة التحقق"</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">5</div>
                         <div class="step-content">
-                            <h4>إجراء الفحص</h4>
-                            <p>عندما يظهر "المساعد متصل"، يمكنك الآن إجراء فحص دقيق للجهاز</p>
+                            <h4>🚀 بدء الفحص</h4>
+                            <p>عندما يظهر "✓ مساعد فحص الجهاز متصل"، يمكنك:</p>
+                            <ul class="compatibility-list" style="margin-top: 8px;">
+                                <li>العودة إلى صفحة الفحص الرئيسية</li>
+                                <li>الضغط على "بدء الفحص"</li>
+                                <li>ستظهر معلومات دقيقة عن جهازك</li>
+                            </ul>
                         </div>
                     </div>
                 </div>

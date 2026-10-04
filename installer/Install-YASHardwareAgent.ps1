@@ -17,7 +17,8 @@
 
 param(
     [switch]$Silent = $false,
-    [string]$InstallPath = "C:\Program Files\YAS Hardware Agent"
+    [string]$InstallPath = "C:\Program Files\YAS Hardware Agent",
+    [string]$SourcePath = $null
 )
 
 # Configuration
@@ -27,7 +28,57 @@ $APP_EXECUTABLE = "YAS.HardwareAgent.exe"
 $AGENT_URL = "http://127.0.0.1:5275/api/health"
 $AGENT_PORT = 5275
 $TASK_NAME = "YAS Hardware Agent"
-$SOURCE_DIR = "$PSScriptRoot\..\hardware-agent\publish"
+
+# Determine source directory (multiple fallback methods)
+function Find-SourceDirectory {
+    param([string]$ProvidedPath)
+    
+    # 1. Use provided path if specified
+    if ($ProvidedPath -and (Test-Path -Path $ProvidedPath)) {
+        return $ProvidedPath
+    }
+    
+    # 2. Check relative to script location
+    $scriptDir = Split-Path -Parent $PSScriptRoot
+    $publishDir = Join-Path $scriptDir "hardware-agent\publish"
+    if (Test-Path -Path $publishDir) {
+        return $publishDir
+    }
+    
+    # 3. Check in downloads folder
+    $downloadDir = Join-Path $env:USERPROFILE "Downloads\YAS-Hardware-Agent-Setup"
+    if (Test-Path -Path $downloadDir) {
+        return $downloadDir
+    }
+    
+    # 4. Check same directory as script
+    $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+    if (Test-Path -Path "$scriptPath\$APP_EXECUTABLE") {
+        return $scriptPath
+    }
+    
+    # 5. Check parent directory of script
+    $parentPath = Split-Path -Parent $scriptPath
+    if (Test-Path -Path "$parentPath\$APP_EXECUTABLE") {
+        return $parentPath
+    }
+    
+    # 6. Check common install locations (portable)
+    @(
+        "$env:ProgramFiles\YAS Hardware Agent",
+        "$env:ProgramFiles(x86)\YAS Hardware Agent",
+        "$env:APPDATA\YAS Hardware Agent",
+        "C:\YAS Hardware Agent"
+    ) | ForEach-Object {
+        if (Test-Path -Path $_) {
+            return $_
+        }
+    }
+    
+    return $null
+}
+
+$SOURCE_DIR = Find-SourceDirectory -ProvidedPath $SourcePath
 
 # Colors for output
 $ErrorColor = "Red"
@@ -81,17 +132,31 @@ function Install-HardwareAgent {
     
     # Verify source files exist
     Write-Info "Verifying installation files..."
-    if (-not (Test-Path -Path $SOURCE_DIR)) {
-        Write-Error-Custom "Source directory not found: $SOURCE_DIR"
+    
+    if (-not $SOURCE_DIR -or -not (Test-Path -Path $SOURCE_DIR)) {
+        Write-Error-Custom "Source directory not found!"
+        Write-Error-Custom "Searched locations:"
+        Write-Host "  1. Script directory: $(Split-Path -Parent $MyInvocation.MyCommand.Path)"
+        Write-Host "  2. hardware-agent\publish relative to script"
+        Write-Host "  3. Downloads\YAS-Hardware-Agent-Setup"
+        Write-Host "  4. Program Files\YAS Hardware Agent"
+        Write-Host "  5. AppData\YAS Hardware Agent"
+        Write-Info "Solution: Download the complete package from the website or specify -SourcePath parameter"
+        Write-Info "Usage: .\Install-YASHardwareAgent.ps1 -SourcePath 'C:\path\to\agent\files'"
         exit 1
     }
     
     if (-not (Test-Path -Path "$SOURCE_DIR\$APP_EXECUTABLE")) {
-        Write-Error-Custom "Application executable not found: $SOURCE_DIR\$APP_EXECUTABLE"
+        Write-Error-Custom "Application executable not found in: $SOURCE_DIR"
+        Write-Info "Files found in directory:"
+        Get-ChildItem -Path $SOURCE_DIR -File | ForEach-Object {
+            Write-Host "  - $($_.Name)"
+        }
+        Write-Error-Custom "The file '$APP_EXECUTABLE' is missing from the installation package"
         exit 1
     }
     
-    Write-Success "Installation files found"
+    Write-Success "Installation files found in: $SOURCE_DIR"
     
     # Create installation directory
     Write-Info "Creating installation directory: $InstallPath"
