@@ -52,41 +52,40 @@ set "SOURCE_DIR=%~dp0"
 REM Try current directory first
 if exist "%SOURCE_DIR%%APP_EXE%" (
     echo [OK] Installation files found in: %SOURCE_DIR%
+    goto filesFound
 ) else (
     REM Try parent directory (if installer is in subfolder)
     if exist "%SOURCE_DIR%..\%APP_EXE%" (
-        set "SOURCE_DIR=%SOURCE_DIR%..\%APP_EXE%"
         cd /d "%SOURCE_DIR%.."
-        set "SOURCE_DIR=!cd!"
+        set "SOURCE_DIR=!cd!\"
         echo [OK] Installation files found in parent directory
-    ) else if exist "%SOURCE_DIR%..\..\%APP_EXE%" (
-        set "SOURCE_DIR=%SOURCE_DIR%..\..\%APP_EXE%"
-        cd /d "%SOURCE_DIR%..\..\"
-        set "SOURCE_DIR=!cd!"
-        echo [OK] Installation files found in grandparent directory
-    ) else (
-        echo.
-        echo [ERROR] File not found: %APP_EXE%
-        echo.
-        echo Searched in:
-        echo   - %~dp0
-        echo   - %~dp0..
-        echo   - %~dp0..\..
-        echo.
-        echo Please make sure you extracted all files from the ZIP archive.
-        echo The following files should be present:
-        echo   - %APP_EXE%
-        echo   - YAS.HardwareAgent.dll
-        echo   - Many other .DLL files
-        echo.
-        echo ملاحظة: يجب أن تشغل Install.bat من نفس المجلد اللي فيه الملفات
-        echo.
-        pause
-        exit /b 1
+        goto filesFound
     )
 )
 
+REM If we reach here, show error with more helpful message
 echo.
+echo [ERROR] File not found: %APP_EXE%
+echo.
+echo Searched in:
+echo   - %~dp0
+echo   - %~dp0..
+echo.
+echo Solution / الحل:
+echo   Make sure you run Install.bat from the SAME folder where it's located.
+echo   تأكد أن تشغّل Install.bat من نفس المجلد اللي فيه الملف
+echo.
+echo Expected structure / البنية المتوقعة:
+echo   YAS-Hardware-Agent-Setup\
+echo     - Install.bat (THIS FILE)
+echo     - YAS.HardwareAgent.exe
+echo     - YAS.HardwareAgent.dll
+echo     - (Other DLL files...)
+echo.
+pause
+exit /b 1
+
+:filesFound
 
 :: Create installation directory
 echo [*] Creating installation directory...
