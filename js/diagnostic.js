@@ -517,13 +517,23 @@ const DiagnosticEngine = {
 
         // CPU
         const cpuName = this.getInfoValue(deviceInfo.cpu?.name);
+        const cpuManufacturer = this.getInfoValue(deviceInfo.cpu?.manufacturer);
         const cpuCores = this.getInfoValue(deviceInfo.cpu?.cores);
         const cpuLogical = this.getInfoValue(deviceInfo.cpu?.logicalProcessors);
+        const cpuMaxClock = this.getInfoValue(deviceInfo.cpu?.maxClockMHz);
+        const cpuCurrentClock = this.getInfoValue(deviceInfo.cpu?.currentClockMHz);
+        const cpuL2Cache = this.getInfoValue(deviceInfo.cpu?.l2CacheSizeKB);
+        const cpuL3Cache = this.getInfoValue(deviceInfo.cpu?.l3CacheSizeKB);
+        const cpuArchitecture = this.getInfoValue(deviceInfo.cpu?.architecture);
+        const cpuSocket = this.getInfoValue(deviceInfo.cpu?.socketDesignation);
 
-        if (cpuName || cpuCores) {
+        if (cpuName || cpuManufacturer || cpuCores) {
             html += '<div class="device-info-section"><h3 class="device-info-section-title">المعالج</h3>';
+            if (cpuManufacturer) {
+                html += this.createDeviceInfoCard('الشركة المصنعة', cpuManufacturer);
+            }
             if (cpuName) {
-                html += this.createDeviceInfoCard('النوع', cpuName);
+                html += this.createDeviceInfoCard('الموديل', cpuName);
             }
             if (cpuCores) {
                 html += this.createDeviceInfoCard('الأنوية الفعلية', cpuCores);
@@ -531,15 +541,87 @@ const DiagnosticEngine = {
             if (cpuLogical) {
                 html += this.createDeviceInfoCard('المعالجات المنطقية', cpuLogical);
             }
+            if (cpuMaxClock) {
+                html += this.createDeviceInfoCard('السرعة القصوى', `${cpuMaxClock} MHz`);
+            }
+            if (cpuCurrentClock) {
+                html += this.createDeviceInfoCard('السرعة الحالية', `${cpuCurrentClock} MHz`);
+            }
+            if (cpuL2Cache) {
+                html += this.createDeviceInfoCard('الذاكرة المؤقتة L2', `${cpuL2Cache} KB`);
+            }
+            if (cpuL3Cache) {
+                html += this.createDeviceInfoCard('الذاكرة المؤقتة L3', `${cpuL3Cache} KB`);
+            }
+            if (cpuArchitecture) {
+                html += this.createDeviceInfoCard('البنية', cpuArchitecture);
+            }
+            if (cpuSocket) {
+                html += this.createDeviceInfoCard('الفتحة', cpuSocket);
+            }
             html += '</div>';
         }
 
         // Memory
-        const ramGB = this.getInfoValue(deviceInfo.memory?.totalGB);
+        const ramTotal = this.getInfoValue(deviceInfo.memory?.totalGB);
+        const ramUsed = this.getInfoValue(deviceInfo.memory?.usedGB);
+        const ramAvailable = this.getInfoValue(deviceInfo.memory?.availableGB);
+        const ramUsagePercent = this.getInfoValue(deviceInfo.memory?.usagePercent);
+        const ramModules = deviceInfo.memory?.modules || [];
 
-        if (ramGB) {
-            html += '<div class="device-info-section"><h3 class="device-info-section-title">الذاكرة</h3>';
-            html += this.createDeviceInfoCard('السعة', `${ramGB} GB`);
+        if (ramTotal || ramUsed || ramAvailable) {
+            html += '<div class="device-info-section"><h3 class="device-info-section-title">الذاكرة العشوائية</h3>';
+            if (ramTotal) {
+                html += this.createDeviceInfoCard('الإجمالي', `${ramTotal} GB`);
+            }
+            if (ramUsed) {
+                html += this.createDeviceInfoCard('المستخدم', `${ramUsed} GB`);
+            }
+            if (ramAvailable) {
+                html += this.createDeviceInfoCard('المتاح', `${ramAvailable} GB`);
+            }
+            if (ramUsagePercent) {
+                html += this.createDeviceInfoCard('نسبة الاستخدام', `${ramUsagePercent}%`);
+            }
+            
+            // Memory Modules
+            if (ramModules.length > 0) {
+                html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">';
+                html += '<h4 style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">وحدات الذاكرة</h4>';
+                ramModules.forEach((module, index) => {
+                    const modManufacturer = this.getInfoValue(module.manufacturer);
+                    const modCapacityGB = this.getInfoValue(module.capacityGB);
+                    const modSpeed = this.getInfoValue(module.speedMHz);
+                    const modType = this.getInfoValue(module.type);
+                    const modFormFactor = this.getInfoValue(module.formFactor);
+                    const modDeviceLocator = this.getInfoValue(module.deviceLocator);
+                    
+                    if (modManufacturer || modCapacityGB) {
+                        html += `<div style="padding: 8px; margin-bottom: 8px; background-color: #f9f9f9; border-radius: 4px;">`;
+                        html += `<div style="font-size: 0.8rem; color: #999; margin-bottom: 4px;">وحدة ${index + 1}</div>`;
+                        if (modManufacturer) {
+                            html += `<div style="font-size: 0.85rem;"><strong>${modManufacturer}</strong></div>`;
+                        }
+                        if (modCapacityGB) {
+                            html += `<div style="font-size: 0.85rem; color: #666;">${modCapacityGB} GB</div>`;
+                        }
+                        if (modSpeed) {
+                            html += `<div style="font-size: 0.8rem; color: #999;">${modSpeed} MHz</div>`;
+                        }
+                        if (modType) {
+                            html += `<div style="font-size: 0.8rem; color: #999;">${modType}</div>`;
+                        }
+                        if (modFormFactor) {
+                            html += `<div style="font-size: 0.8rem; color: #999;">${modFormFactor}</div>`;
+                        }
+                        if (modDeviceLocator) {
+                            html += `<div style="font-size: 0.8rem; color: #999;">الموقع: ${modDeviceLocator}</div>`;
+                        }
+                        html += `</div>`;
+                    }
+                });
+                html += '</div>';
+            }
             html += '</div>';
         }
 

@@ -250,33 +250,144 @@ const Admin = {
             const deviceType = this.getInfoValue(deviceInfo.computer?.deviceType);
             const osName = this.getInfoValue(deviceInfo.operatingSystem?.name);
             const osVersion = this.getInfoValue(deviceInfo.operatingSystem?.version);
-            const cpuName = this.getInfoValue(deviceInfo.cpu?.name);
-            const cpuCores = this.getInfoValue(deviceInfo.cpu?.cores);
-            const ramGB = this.getInfoValue(deviceInfo.memory?.totalGB);
+            const osBuild = this.getInfoValue(deviceInfo.operatingSystem?.build);
+            const osArch = this.getInfoValue(deviceInfo.operatingSystem?.architecture);
 
-            if (manufacturer) {
-                html += this.createInfoItem('الشركة المصنعة', manufacturer);
+            // Computer Section
+            if (manufacturer || model) {
+                html += '<div class="info-section"><h4 class="section-title">معلومات الجهاز</h4>';
+                if (manufacturer) {
+                    html += this.createInfoItem('الشركة المصنعة', manufacturer);
+                }
+                if (model) {
+                    html += this.createInfoItem('الموديل', model);
+                }
+                if (deviceType) {
+                    html += this.createInfoItem('نوع الجهاز', deviceType);
+                }
+                html += '</div>';
             }
-            if (model) {
-                html += this.createInfoItem('الموديل', model);
-            }
-            if (deviceType) {
-                html += this.createInfoItem('نوع الجهاز', deviceType);
-            }
+
+            // Operating System Section
             if (osName) {
-                html += this.createInfoItem('نظام التشغيل', osName);
+                html += '<div class="info-section"><h4 class="section-title">نظام التشغيل</h4>';
+                html += this.createInfoItem('النظام', osName);
+                if (osVersion) {
+                    html += this.createInfoItem('الإصدار', osVersion);
+                }
+                if (osBuild) {
+                    html += this.createInfoItem('البناء', osBuild);
+                }
+                if (osArch) {
+                    html += this.createInfoItem('البنية', osArch);
+                }
+                html += '</div>';
             }
-            if (osVersion) {
-                html += this.createInfoItem('الإصدار', osVersion);
+
+            // CPU Section
+            const cpuName = this.getInfoValue(deviceInfo.cpu?.name);
+            const cpuManufacturer = this.getInfoValue(deviceInfo.cpu?.manufacturer);
+            const cpuCores = this.getInfoValue(deviceInfo.cpu?.cores);
+            const cpuLogical = this.getInfoValue(deviceInfo.cpu?.logicalProcessors);
+            const cpuMaxClock = this.getInfoValue(deviceInfo.cpu?.maxClockMHz);
+            const cpuCurrentClock = this.getInfoValue(deviceInfo.cpu?.currentClockMHz);
+            const cpuL2Cache = this.getInfoValue(deviceInfo.cpu?.l2CacheSizeKB);
+            const cpuL3Cache = this.getInfoValue(deviceInfo.cpu?.l3CacheSizeKB);
+            const cpuSocket = this.getInfoValue(deviceInfo.cpu?.socketDesignation);
+
+            if (cpuName || cpuManufacturer) {
+                html += '<div class="info-section"><h4 class="section-title">المعالج</h4>';
+                if (cpuManufacturer) {
+                    html += this.createInfoItem('الشركة المصنعة', cpuManufacturer);
+                }
+                if (cpuName) {
+                    html += this.createInfoItem('الموديل', cpuName);
+                }
+                if (cpuCores) {
+                    html += this.createInfoItem('الأنوية الفعلية', cpuCores);
+                }
+                if (cpuLogical) {
+                    html += this.createInfoItem('المعالجات المنطقية', cpuLogical);
+                }
+                if (cpuMaxClock) {
+                    html += this.createInfoItem('السرعة القصوى', `${cpuMaxClock} MHz`);
+                }
+                if (cpuCurrentClock) {
+                    html += this.createInfoItem('السرعة الحالية', `${cpuCurrentClock} MHz`);
+                }
+                if (cpuL2Cache) {
+                    html += this.createInfoItem('L2 Cache', `${cpuL2Cache} KB`);
+                }
+                if (cpuL3Cache) {
+                    html += this.createInfoItem('L3 Cache', `${cpuL3Cache} KB`);
+                }
+                if (cpuSocket) {
+                    html += this.createInfoItem('الفتحة', cpuSocket);
+                }
+                html += '</div>';
             }
-            if (cpuName) {
-                html += this.createInfoItem('المعالج', cpuName);
-            }
-            if (cpuCores) {
-                html += this.createInfoItem('الأنوية', cpuCores);
-            }
-            if (ramGB) {
-                html += this.createInfoItem('الذاكرة', `${ramGB} GB`);
+
+            // Memory Section
+            const ramTotal = this.getInfoValue(deviceInfo.memory?.totalGB);
+            const ramUsed = this.getInfoValue(deviceInfo.memory?.usedGB);
+            const ramAvailable = this.getInfoValue(deviceInfo.memory?.availableGB);
+            const ramUsagePercent = this.getInfoValue(deviceInfo.memory?.usagePercent);
+            const ramModules = deviceInfo.memory?.modules || [];
+
+            if (ramTotal || ramUsed || ramAvailable) {
+                html += '<div class="info-section"><h4 class="section-title">الذاكرة العشوائية</h4>';
+                if (ramTotal) {
+                    html += this.createInfoItem('الإجمالي', `${ramTotal} GB`);
+                }
+                if (ramUsed) {
+                    html += this.createInfoItem('المستخدم', `${ramUsed} GB`);
+                }
+                if (ramAvailable) {
+                    html += this.createInfoItem('المتاح', `${ramAvailable} GB`);
+                }
+                if (ramUsagePercent) {
+                    html += this.createInfoItem('نسبة الاستخدام', `${ramUsagePercent}%`);
+                }
+                
+                // Memory Modules
+                if (ramModules.length > 0) {
+                    html += '<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">';
+                    html += '<h5 style="font-size: 0.9rem; color: #666; margin-bottom: 8px;">وحدات الذاكرة:</h5>';
+                    ramModules.forEach((module, index) => {
+                        const modManufacturer = this.getInfoValue(module.manufacturer);
+                        const modCapacityGB = this.getInfoValue(module.capacityGB);
+                        const modSpeed = this.getInfoValue(module.speedMHz);
+                        const modType = this.getInfoValue(module.type);
+                        const modFormFactor = this.getInfoValue(module.formFactor);
+                        const modDeviceLocator = this.getInfoValue(module.deviceLocator);
+                        
+                        if (modManufacturer || modCapacityGB) {
+                            html += `<div style="padding: 10px; margin-bottom: 8px; background-color: #f9f9f9; border-left: 3px solid var(--color-primary); border-radius: 2px;">`;
+                            html += `<div style="font-weight: bold; color: var(--color-primary); margin-bottom: 4px;">وحدة ${index + 1}</div>`;
+                            if (modManufacturer) {
+                                html += `<div style="margin-bottom: 2px;">الشركة: <strong>${modManufacturer}</strong></div>`;
+                            }
+                            if (modCapacityGB) {
+                                html += `<div style="margin-bottom: 2px;">السعة: <strong>${modCapacityGB} GB</strong></div>`;
+                            }
+                            if (modSpeed) {
+                                html += `<div style="margin-bottom: 2px;">السرعة: ${modSpeed} MHz</div>`;
+                            }
+                            if (modType) {
+                                html += `<div style="margin-bottom: 2px;">النوع: ${modType}</div>`;
+                            }
+                            if (modFormFactor) {
+                                html += `<div style="margin-bottom: 2px;">الشكل: ${modFormFactor}</div>`;
+                            }
+                            if (modDeviceLocator) {
+                                html += `<div style="margin-bottom: 2px;">الموقع: ${modDeviceLocator}</div>`;
+                            }
+                            html += `</div>`;
+                        }
+                    });
+                    html += '</div>';
+                }
+                html += '</div>';
             }
 
             // GPU

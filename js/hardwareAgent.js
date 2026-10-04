@@ -228,24 +228,52 @@ const HardwareAgent = {
                 manufacturer: this.createInfoField(agentData.computer?.manufacturer, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 model: this.createInfoField(agentData.computer?.model, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 deviceType: this.createInfoField(agentData.computer?.deviceType, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
-                serialNumber: this.createInfoField(agentData.computer?.serialNumber, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
+                serialNumber: this.createInfoField(agentData.computer?.serialNumber, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                computerName: this.createInfoField(agentData.computer?.computerName, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
             },
             operatingSystem: {
                 name: this.createInfoField(agentData.operatingSystem?.name, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 version: this.createInfoField(agentData.operatingSystem?.version, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
-                build: this.createInfoField(agentData.operatingSystem?.build, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
+                build: this.createInfoField(agentData.operatingSystem?.build, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                architecture: this.createInfoField(agentData.operatingSystem?.architecture, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                installDate: this.createInfoField(agentData.operatingSystem?.installDate, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                systemDirectory: this.createInfoField(agentData.operatingSystem?.systemDirectory, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
             },
             cpu: {
                 name: this.createInfoField(agentData.cpu?.name, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 manufacturer: this.createInfoField(agentData.cpu?.manufacturer, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                description: this.createInfoField(agentData.cpu?.description, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 cores: this.createInfoField(agentData.cpu?.cores, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 logicalProcessors: this.createInfoField(agentData.cpu?.logicalProcessors, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
-                maxClockMHz: this.createInfoField(agentData.cpu?.maxClockMHz, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
+                maxClockMHz: this.createInfoField(agentData.cpu?.maxClockMHz, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                currentClockMHz: this.createInfoField(agentData.cpu?.currentClockMHz, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                architecture: this.createInfoField(agentData.cpu?.architecture, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                processorId: this.createInfoField(agentData.cpu?.processorId, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                socketDesignation: this.createInfoField(agentData.cpu?.socketDesignation, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                l2CacheSizeKB: this.createInfoField(agentData.cpu?.l2CacheSizeKB, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                l3CacheSizeKB: this.createInfoField(agentData.cpu?.l3CacheSizeKB, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
             },
             memory: {
                 totalBytes: this.createInfoField(agentData.memory?.totalBytes, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
                 totalGB: this.createInfoField(agentData.memory?.totalGB, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
-                modules: agentData.memory?.modules || []
+                usedBytes: this.createInfoField(agentData.memory?.usedBytes, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                usedGB: this.createInfoField(agentData.memory?.usedGB, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                availableBytes: this.createInfoField(agentData.memory?.availableBytes, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                availableGB: this.createInfoField(agentData.memory?.availableGB, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                usagePercent: this.createInfoField(agentData.memory?.usagePercent, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                modules: (agentData.memory?.modules || []).map(module => ({
+                    manufacturer: this.createInfoField(module.manufacturer, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    capacityBytes: this.createInfoField(module.capacityBytes, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    capacityGB: this.createInfoField(module.capacityGB, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    type: this.createInfoField(module.type, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    speedMHz: this.createInfoField(module.speedMHz, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    configuredClockSpeedMHz: this.createInfoField(module.configuredClockSpeedMHz, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    partNumber: this.createInfoField(module.partNumber, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    serialNumber: this.createInfoField(module.serialNumber, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    formFactor: this.createInfoField(module.formFactor, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    deviceLocator: this.createInfoField(module.deviceLocator, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH),
+                    bankLabel: this.createInfoField(module.bankLabel, this.SOURCES.HARDWARE_AGENT, this.CONFIDENCE.HIGH)
+                }))
             },
             gpu: agentData.gpu || [],
             storage: agentData.storage || [],
