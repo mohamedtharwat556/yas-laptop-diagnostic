@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "buildDate": "2026-10-04",
+  "platform": "Windows x64",
+  "framework": ".NET 8.0",
+  "selfContained": true,
+  "minimumWindows": "10",
+  "agentPort": 5275,
+  "installLocation": "C:\\Program Files\\YAS Hardware Agent"
+}

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحميل مساعد فحص الجهاز - YAS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+            text-align: right;
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .icon {
+            font-size: 1.5em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .status-box {
+            background: #f0f7ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .status-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .status-icon.connected {
+            color: #28a745;
+        }
+
+        .status-icon.disconnected {
+            color: #dc3545;
+        }
+
+        .status-icon.checking {
+            color: #ffc107;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 1.2em;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .installation-steps {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            font-size: 1.1em;
+        }
+
+        .step-content h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .step-content p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin: 10px 0;
+            direction: ltr;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        .info-box strong {
+            color: #856404;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: right;
+            color: #155724;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: right;
+            color: #721c24;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+
+        .footer p {
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .technical-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #666;
+            margin: 15px 0;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .technical-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .compatibility-list {
+            list-style: none;
+            margin: 15px 0;
+            text-align: right;
+        }
+
+        .compatibility-list li {
+            padding: 8px 0;
+            padding-right: 25px;
+            position: relative;
+            color: #666;
+        }
+
+        .compatibility-list li:before {
+            content: "✓";
+            position: absolute;
+            right: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .close {
+            cursor: pointer;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .installation-steps {
+                padding: 15px;
+            }
+
+            .step {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🔧</div>
+            <h1>مساعد فحص الجهاز</h1>
+            <p>للحصول على معلومات دقيقة عن مكونات اللابتوب</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Status Section -->
+            <div class="section">
+                <h2>حالة التثبيت</h2>
+                <div class="status-box">
+                    <div class="status-icon checking" id="statusIcon">🔍</div>
+                    <div class="status-text" id="statusText">جاري التحقق من التثبيت...</div>
+                    <button class="btn btn-secondary" onclick="checkInstallation()" style="margin-top: 15px;">إعادة التحقق</button>
+                </div>
+                <div id="statusDetails" style="display: none; margin-top: 15px; text-align: right;">
+                    <p id="detailsText"></p>
+                </div>
+            </div>
+
+            <!-- Why You Need It -->
+            <div class="section">
+                <h2>🎯 لماذا نحتاج المساعد؟</h2>
+                <p style="color: #666; margin-bottom: 15px; line-height: 1.8; text-align: right;">
+                    المتصفح لديه محدودية في الوصول إلى معلومات الجهاز الحقيقية لأسباب الأمان. مساعد فحص الجهاز يسمح بـ:
+                </p>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="icon">💻</span> معلومات دقيقة</h3>
+                        <p>الحصول على بيانات الجهاز الحقيقية من Windows</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">⚡</span> أداء أفضل</h3>
+                        <p>فحص سريع وفعال لجميع المكونات</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">🔒</span> آمن وموثوق</h3>
+                        <p>يعمل محلياً فقط، لا يوجد خصوصية مخاطر</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">📊</span> تقارير كاملة</h3>
+                        <p>معلومات شاملة عن كل مكونات الجهاز</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What it Reads -->
+            <div class="section">
+                <h2>✓ المعلومات التي سيقرأها</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="icon">🖥️</span> الجهاز</h3>
+                        <ul class="compatibility-list">
+                            <li>الشركة المصنعة</li>
+                            <li>الموديل</li>
+                            <li>رقم السريال</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">⚙️</span> المعالج</h3>
+                        <ul class="compatibility-list">
+                            <li>اسم المعالج</li>
+                            <li>عدد الأنوية</li>
+                            <li>السرعة</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">🧠</span> الذاكرة</h3>
+                        <ul class="compatibility-list">
+                            <li>الحجم الكلي</li>
+                            <li>السرعة</li>
+                            <li>نوع الذاكرة</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">📦</span> التخزين</h3>
+                        <ul class="compatibility-list">
+                            <li>الأقراص الثابتة</li>
+                            <li>المساحة المتاحة</li>
+                            <li>النوع والسرعة</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">🎨</span> كرت الشاشة</h3>
+                        <ul class="compatibility-list">
+                            <li>اسم الكرت</li>
+                            <li>الذاكرة المخصصة</li>
+                            <li>الإصدار</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="icon">🔋</span> الشاملة</h3>
+                        <ul class="compatibility-list">
+                            <li>حالة البطارية</li>
+                            <li>دورات الشحن</li>
+                            <li>الصحة العامة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="section" style="text-align: center;">
+                <h2>📥 التحميل والتثبيت</h2>
+                <p style="color: #666; margin-bottom: 20px; line-height: 1.8;">
+                    اختر طريقة التثبيت المناسبة لك
+                </p>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="downloadAgent()">
+                        <span>📥</span>
+                        <span>تحميل المساعد</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="showPortableInfo()">
+                        <span>⚡</span>
+                        <span>تشغيل مؤقت (Portable)</span>
+                    </button>
+                </div>
+                <div class="info-box">
+                    <strong>ℹ️ معلومة:</strong> التحميل 50 MB تقريباً. يتطلب Windows 10 أو 11
+                </div>
+            </div>
+
+            <!-- Installation Steps -->
+            <div class="section">
+                <h2>📋 خطوات التثبيت</h2>
+                <div class="installation-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>تحميل الملف</h4>
+                            <p>اضغط على زر "تحميل المساعد" وانتظر انتهاء التحميل</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>تشغيل برنامج التثبيت</h4>
+                            <p>افتح ملف "Install.bat" وانقر عليه بزر الماوس الأيمن واختر "تشغيل كمسؤول"</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>متابعة التثبيت</h4>
+                            <p>اتبع التعليمات على الشاشة. سيتم التثبيت تلقائياً في "C:\Program Files\YAS Hardware Agent"</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>التحقق من التثبيت</h4>
+                            <p>بعد التثبيت، عد إلى هذه الصفحة واضغط "إعادة التحقق" للتأكد من أن المساعد يعمل</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>إجراء الفحص</h4>
+                            <p>عندما يظهر "المساعد متصل"، يمكنك الآن إجراء فحص دقيق للجهاز</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compatibility -->
+            <div class="section">
+                <h2>✅ المتطلبات</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div class="feature-card">
+                        <h3>نظام التشغيل</h3>
+                        <ul class="compatibility-list">
+                            <li>Windows 10 أو أحدث</li>
+                            <li>Windows 11</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3>المتطلبات الأخرى</h3>
+                        <ul class="compatibility-list">
+                            <li>صلاحيات المسؤول للتثبيت</li>
+                            <li>200 MB مساحة حرة</li>
+                            <li>.NET 8.0 (مرفق)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="section">
+                <h2>🔧 استكشاف الأخطاء</h2>
+                <div class="info-box" style="margin-top: 15px;">
+                    <strong>المساعد لا يعمل؟</strong><br><br>
+                    <div style="text-align: right; margin-top: 10px;">
+                        1. تأكد من تشغيل برنامج التثبيت كمسؤول<br>
+                        2. تحقق من أن Windows Defender لا يحجب البرنامج<br>
+                        3. أضف البرنامج إلى قائمة الاستثناءات في برنامج مكافحة الفيروسات<br>
+                        4. حاول إعادة تشغيل الجهاز<br>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Link for Manual -->
+            <div class="section" style="text-align: center; display: none;" id="downloadSection">
+                <a href="/downloads/YAS-Hardware-Agent-Setup/Install.bat" class="btn btn-primary" download>
+                    <span>💾</span>
+                    <span>تحميل الآن</span>
+                </a>
+                <p style="color: #666; margin-top: 10px;">إذا لم يبدأ التحميل تلقائياً، انقر على الزر</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>نظام فحص أجهزة اللابتوب - YAS</strong></p>
+            <p style="font-size: 0.9em; color: #999;">إصدار 1.0.0 | 2026</p>
+            <p style="margin-top: 15px; font-size: 0.85em;">
+                <a href="/" style="color: #667eea; text-decoration: none;">العودة للفحص الرئيسي</a> | 
+                <a href="/admin/login.html" style="color: #667eea; text-decoration: none;">لوحة التحكم</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal for Portable Info -->
+    <div id="portableModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closePortableModal()">&times;</span>
+            <h2>التشغيل المؤقت (Portable)</h2>
+            <p style="text-align: right; color: #666; line-height: 1.8; margin: 15px 0;">
+                هذا الوضع يسمح لك بتشغيل المساعد مؤقتاً دون تثبيت دائم.
+            </p>
+            <div class="info-box" style="text-align: right;">
+                ⚠️ <strong>ملاحظة:</strong> المساعد لن يبدأ تلقائياً عند إعادة التشغيل في هذا الوضع
+            </div>
+            <ol style="text-align: right; direction: rtl; display: inline-block; margin: 20px 0;">
+                <li>انقر على زر "تحميل المساعد"</li>
+                <li>افتح المجلد المحمّل</li>
+                <li>ابحث عن ملف "Run-Agent-Portable.bat"</li>
+                <li>انقر عليه لتشغيل المساعد</li>
+            </ol>
+            <button class="btn btn-primary" onclick="closePortableModal()" style="width: 100%; margin-top: 20px;">
+                حسناً
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const AGENT_URL = 'http://127.0.0.1:5275/api/health';
+        const DOWNLOAD_URL = '/downloads/YAS-Hardware-Agent-Setup/';
+
+        // Check installation status on page load
+        window.addEventListener('load', () => {
+            checkInstallation();
+        });
+
+        async function checkInstallation() {
+            const statusIcon = document.getElementById('statusIcon');
+            const statusText = document.getElementById('statusText');
+            const statusDetails = document.getElementById('statusDetails');
+            const detailsText = document.getElementById('detailsText');
+
+            // Show checking state
+            statusIcon.className = 'status-icon checking';
+            statusText.textContent = 'جاري التحقق من التثبيت...';
+            statusDetails.style.display = 'none';
+
+            try {
+                const response = await fetch(AGENT_URL, {
+                    method: 'GET',
+                    mode: 'cors',
+                    timeout: 3000
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Agent is connected
+                    statusIcon.className = 'status-icon connected';
+                    statusText.textContent = '✓ مساعد فحص الجهاز متصل';
+                    
+                    statusDetails.style.display = 'block';
+                    detailsText.innerHTML = `
+                        <strong style="color: #28a745;">الحالة:</strong> جاهز للاستخدام<br>
+                        <strong style="color: #28a745;">الإصدار:</strong> ${data.version || '1.0.0'}<br>
+                        <strong style="color: #28a745;">الحالة:</strong> ${data.status}
+                    `;
+
+                    // Update button
+                    document.querySelector('[onclick="checkInstallation()"]').textContent = 'إعادة التحقق';
+                } else {
+                    throw new Error('Agent not responding');
+                }
+            } catch (error) {
+                // Agent not connected
+                statusIcon.className = 'status-icon disconnected';
+                statusText.textContent = '✗ مساعد فحص الجهاز غير متصل';
+                
+                statusDetails.style.display = 'block';
+                detailsText.innerHTML = `
+                    <strong style="color: #dc3545;">الحالة:</strong> غير متثبت أو لا يعمل<br>
+                    <p style="margin-top: 10px; color: #666;">
+                        للحصول على معلومات دقيقة عن الجهاز، يرجى تحميل المساعد وتثبيته
+                    </p>
+                `;
+            }
+        }
+
+        function downloadAgent() {
+            // Create a temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = DOWNLOAD_URL + 'Install.bat';
+            link.download = 'YAS-Hardware-Agent-Setup.zip';
+            
+            // Show info message
+            alert('سيتم تحميل ملف التثبيت. بعد التحميل، شغّل ملف Install.bat كمسؤول.');
+            
+            // Trigger download
+            window.location.href = DOWNLOAD_URL;
+        }
+
+        function showPortableInfo() {
+            document.getElementById('portableModal').classList.add('show');
+        }
+
+        function closePortableModal() {
+            document.getElementById('portableModal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('portableModal');
+            if (event.target == modal) {
+                modal.classList.remove('show');
+            }
+        });
+
+        // Auto-refresh status every 10 seconds
+        setInterval(checkInstallation, 10000);
+    </script>
+</body>
+</html>
