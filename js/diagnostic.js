@@ -163,22 +163,26 @@ const DiagnosticEngine = {
         let info = {};
         let hardwareSource = HardwareAgent.SOURCES.BROWSER;
 
-        // Try to get data from Hardware Agent first (only if port is configured)
-        if (HARDWARE_AGENT_CONFIG.port) {
+        // Try to get data from Hardware Agent first
+        try {
+            console.log('[YAS Diagnostic] Attempting Hardware Agent detection');
             await HardwareAgent.detectAgent();
 
             if (HardwareAgent.isConnected) {
+                console.log('[YAS Diagnostic] Agent connected, fetching hardware data');
                 try {
                     const agentData = await HardwareAgent.getHardware();
-                    if (!agentData.error) {
+                    if (agentData && !agentData.error) {
                         info = this.mergeDeviceInfo(agentData);
                         hardwareSource = HardwareAgent.SOURCES.HARDWARE_AGENT;
-                        console.log('Using Hardware Agent data');
+                        console.log('[YAS Diagnostic] Using Hardware Agent data');
                     }
                 } catch (error) {
-                    console.log('Failed to get Hardware Agent data, using browser fallback:', error);
+                    console.log('[YAS Diagnostic] Failed to get Hardware Agent data:', error);
                 }
             }
+        } catch (error) {
+            console.log('[YAS Diagnostic] Hardware Agent detection error:', error);
         }
 
         // If Agent not available or failed, use browser detection
