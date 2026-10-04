@@ -1,9 +1,6 @@
 /**
  * BATCH 6B-6: Proxy API for Hardware Agent
  * Allows HTTPS Vercel → HTTP localhost communication
- * 
- * This endpoint relays hardware data from the local Hardware Agent
- * to the web client without CORS restrictions
  */
 
 export default async function handler(req, res) {
@@ -13,51 +10,61 @@ export default async function handler(req, res) {
     }
 
     try {
-        // IMPORTANT: This only works when deployed to a LOCAL machine
-        // or when the API is running on the same network as the Hardware Agent
+        // Try different possible locations for the Agent
+        const possibleURLs = [
+            'http://127.0.0.1:5275',
+            'http://localhost:5275',
+        ];
+
+        let lastError = null;
         
-        const agentUrl = process.env.HARDWARE_AGENT_URL || 'http://127.0.0.1:5275';
-        const endpoint = `${agentUrl}/api/hardware`;
+        for (const baseURL of possibleURLs) {
+            try {
+                const endpoint = `${baseURL}/api/hardware`;
+                console.log(`[Hardware Proxy] Trying: ${endpoint}`);
 
-        console.log(`[Hardware Proxy] Requesting: ${endpoint}`);
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 3000
+                });
 
-        const response = await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            // Note: targetAddressSpace is not available in Node.js fetch
-            // This proxy only works when:
-            // 1. Deployed on the same machine as Hardware Agent (localhost)
-            // 2. Or on same local network
-            timeout: 5000
-        });
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Add proxy metadata
+                    data._proxy = true;
+                    data._proxiedAt = new Date().toISOString();
+                    data._proxiedFrom = baseURL;
 
-        if (!response.ok) {
-            console.error(`[Hardware Proxy] Error: ${response.status}`);
-            return res.status(response.status).json({
-                error: 'Failed to fetch hardware data',
-                status: response.status
-            });
+                    console.log(`[Hardware Proxy] Success from ${baseURL}`);
+                    return res.status(200).json(data);
+                }
+            } catch (error) {
+                console.log(`[Hardware Proxy] Failed from ${baseURL}:`, error.message);
+                lastError = error;
+                // Try next URL
+                continue;
+            }
         }
 
-        const data = await response.json();
-        
-        // Add proxy metadata
-        data._proxy = true;
-        data._proxiedAt = new Date().toISOString();
-        data._proxiedFrom = agentUrl;
-
-        console.log(`[Hardware Proxy] Success`);
-        return res.status(200).json(data);
+        // All URLs failed
+        console.error('[Hardware Proxy] All URLs failed:', lastError?.message);
+        return res.status(503).json({
+            error: 'Hardware Agent unreachable',
+            message: 'Could not connect to Hardware Agent on any known address',
+            hint: 'Make sure Hardware Agent is running on http://127.0.0.1:5275',
+            tried: possibleURLs
+        });
 
     } catch (error) {
         console.error('[Hardware Proxy] Error:', error.message);
 
         return res.status(503).json({
-            error: 'Hardware Agent unreachable',
-            message: error.message,
-            hint: 'Make sure Hardware Agent is running on http://127.0.0.1:5275'
+            error: 'Internal server error',
+            message: error.message
         });
     }
 }

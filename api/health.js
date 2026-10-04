@@ -9,45 +9,63 @@ export default async function handler(req, res) {
     }
 
     try {
-        const agentUrl = process.env.HARDWARE_AGENT_URL || 'http://127.0.0.1:5275';
-        const endpoint = `${agentUrl}/api/health`;
+        // Try different possible locations
+        const possibleURLs = [
+            'http://127.0.0.1:5275',
+            'http://localhost:5275',
+        ];
 
-        console.log(`[Health Proxy] Checking: ${endpoint}`);
+        let lastError = null;
 
-        const response = await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            timeout: 3000
-        });
+        for (const baseURL of possibleURLs) {
+            try {
+                const endpoint = `${baseURL}/api/health`;
+                console.log(`[Health Proxy] Trying: ${endpoint}`);
 
-        if (!response.ok) {
-            console.error(`[Health Proxy] Status: ${response.status}`);
-            return res.status(response.status).json({
-                status: 'error',
-                agent: 'YAS Hardware Agent',
-                error: `HTTP ${response.status}`
-            });
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 3000
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(`[Health Proxy] Agent healthy from ${baseURL}`);
+                    
+                    return res.status(200).json({
+                        ...data,
+                        _proxy: true,
+                        _proxiedAt: new Date().toISOString(),
+                        _proxiedFrom: baseURL
+                    });
+                }
+            } catch (error) {
+                console.log(`[Health Proxy] Failed from ${baseURL}:`, error.message);
+                lastError = error;
+                // Try next URL
+                continue;
+            }
         }
 
-        const data = await response.json();
-        console.log(`[Health Proxy] Agent healthy`);
-        
-        return res.status(200).json({
-            ...data,
-            _proxy: true,
-            _proxiedAt: new Date().toISOString()
+        // All URLs failed
+        console.error('[Health Proxy] All URLs failed:', lastError?.message);
+        return res.status(503).json({
+            status: 'error',
+            agent: 'YAS Hardware Agent',
+            error: 'Agent unreachable',
+            message: 'Could not connect to Hardware Agent',
+            tried: possibleURLs
         });
 
     } catch (error) {
         console.error('[Health Proxy] Error:', error.message);
 
-        // Return error but don't crash
         return res.status(503).json({
             status: 'error',
             agent: 'YAS Hardware Agent',
-            error: 'Agent unreachable',
+            error: 'Internal server error',
             message: error.message
         });
     }
