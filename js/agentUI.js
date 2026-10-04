@@ -116,22 +116,6 @@ const AgentUI = {
 
     // Handle Agent State Change
     onAgentStateChange: function(event) {
-        console.log(`[AgentUI] State changed: ${event.newState}`);
-        
-        if (event.newState === 'PERMISSION_REQUIRED') {
-            this.onPermissionRequired();
-        }
-    },
-
-    // Handle Agent Disconnected
-    onAgentDisconnected: async function() {
-        console.log('[AgentUI] Agent disconnected');
-        this.agentConnected = false;
-
-        // Show unavailable card
-
-    // Handle Agent State Change
-    onAgentStateChange: function(event) {
         console.log(`[AgentUI] State changed: ${event.newState} - ${event.message}`);
         
         // Update status indicator based on state
@@ -197,33 +181,7 @@ const AgentUI = {
             actions.innerHTML = '';
             actions.appendChild(retryBtn);
         }
-    }
-
-        if (dot && text) {
-            text.textContent = event.message;
-            
-            // Update dot color based on state
-            dot.classList.remove('connected', 'disconnected', 'error');
-            
-            switch (event.newState) {
-                case AgentState.CONNECTED:
-                case AgentState.COLLECTING:
-                case AgentState.COMPLETED:
-                    dot.classList.add('connected');
-                    break;
-                case AgentState.DISCONNECTED:
-                    dot.classList.add('disconnected');
-                    break;
-                case AgentState.ERROR:
-                    dot.classList.add('error');
-                    break;
-                default:
-                    // CHECKING state - pulsing animation
-                    break;
-            }
-        }
     },
-
     // Update Status Indicator
     updateStatusIndicator: function(status) {
         const indicator = document.getElementById('agentStatusIndicator');
