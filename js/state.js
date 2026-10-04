@@ -73,15 +73,22 @@ const AppState = {
     },
     
     // إضافة جلسة فحص جديدة
-    // Ensures Supabase is authoritative for all production sessions
+    // BATCH 6B-6: Ensures Agent verification + hardware source tracking
     addSession: async function(sessionData) {
-        console.log('AppState.addSession called with:', sessionData);
-        console.log('SessionService available:', !!window.sessionService);
+        console.log('[AppState] addSession called with:', sessionData);
+        console.log('[AppState] SessionService available:', !!window.sessionService);
+
+        // BATCH 6B-6: Verify Agent was checked before session creation
+        if (!window.agentPreCheckPassed) {
+            const error = new Error('Agent verification required before session creation');
+            console.error('[AppState] Session creation blocked:', error);
+            throw error;
+        }
 
         // Validate input data
         if (!sessionData.customerName?.trim() || !sessionData.customerPhone?.trim() || !sessionData.problemDescription?.trim()) {
             const error = new Error('Invalid session data: missing required fields');
-            console.error('Session creation failed:', error);
+            console.error('[AppState] Session creation failed:', error);
             throw error;
         }
 
@@ -91,24 +98,29 @@ const AppState = {
         // Try to create session via SessionService (which handles Supabase + fallback)
         if (window.sessionService) {
             try {
-                console.log('Calling SessionService.createSession...');
+                console.log('[AppState] Calling SessionService.createSession...');
                 supabaseSession = await window.sessionService.createSession({
                     name: sessionData.customerName,
                     phone: sessionData.customerPhone,
                     serviceOrder: sessionData.serviceOrder,
-                    problem: sessionData.problemDescription
+                    problem: sessionData.problemDescription,
+                    // BATCH 6B-6: Include Agent metadata
+                    hardware_source: 'hardware-agent',
+                    agent_connected: true,
+                    agent_verified_at: new Date().toISOString()
                 });
-                console.log('Session created by SessionService:', {
+                console.log('[AppState] Session created by SessionService:', {
                     sessionCode: supabaseSession?.sessionCode,
                     supabaseId: supabaseSession?.id,
-                    syncStatus: supabaseSession?.sync_status
+                    syncStatus: supabaseSession?.sync_status,
+                    hardwareSource: supabaseSession?.hardware_source
                 });
             } catch (error) {
                 creationError = error;
-                console.error('SessionService.createSession failed:', error);
+                console.error('[AppState] SessionService.createSession failed:', error);
             }
         } else {
-            console.log('SessionService not available - local mode only');
+            console.log('[AppState] SessionService not available - local mode only');
         }
 
         // Create AppState session
@@ -117,6 +129,10 @@ const AppState = {
             sessionCode: supabaseSession?.sessionCode || null,
             supabaseId: supabaseSession?.id || null,
             syncStatus: supabaseSession?.sync_status || 'pending', // Track sync state
+            // BATCH 6B-6: Hardware source tracking
+            hardwareSource: 'hardware-agent',
+            agentConnected: true,
+            agentVerifiedAt: new Date().toISOString(),
             customer: {
                 name: sessionData.customerName,
                 phone: sessionData.customerPhone,
@@ -146,10 +162,12 @@ const AppState = {
         // Save to localStorage for persistence
         this.saveToLocalStorage();
 
-        console.log('Session added to AppState:', {
+        console.log('[AppState] Session added to AppState:', {
             sessionCode: session.sessionCode,
             status: session.status,
             syncStatus: session.syncStatus,
+            hardwareSource: session.hardwareSource,
+            agentConnected: session.agentConnected,
             isOnline: navigator.onLine
         });
 
@@ -286,18 +304,26 @@ const AppState = {
         }
     },
     
-    // حفظ معلومات الجهاز
+    // حفظ معلومات الجهاز - BATCH 6B-6: Agent source tracking
     saveDeviceInfo: async function(deviceInfo) {
         if (this.currentSession) {
+            // BATCH 6B-6: Validate source is hardware-agent
+            if (deviceInfo.source !== 'hardware-agent') {
+                console.warn('[AppState] Invalid device info source:', deviceInfo.source);
+                // Still save but mark as invalid source
+            }
+            
             this.currentSession.deviceInfo = deviceInfo;
+            this.currentSession.hardwareSource = deviceInfo.source || 'unknown';
             this.saveToLocalStorage();
 
             // Sync to Supabase if available
             if (window.sessionService && this.currentSession.sessionCode) {
                 try {
                     await window.sessionService.saveDeviceInfo(this.currentSession.sessionCode, deviceInfo);
+                    console.log('[AppState] Device info synced to Supabase');
                 } catch (error) {
-                    console.error('Failed to sync device info to Supabase:', error);
+                    console.error('[AppState] Failed to sync device info to Supabase:', error);
                 }
             }
         }
@@ -330,7 +356,7 @@ const AppState = {
         }
     },
     
-    // إتمام جلسة الفحص الحالية
+    // إتمام جلسة الفحص الحالية - BATCH 6B-6: Track hardware source
     completeCurrentSession: function() {
         if (this.currentSession) {
             const summary = this.currentSession.summary;
@@ -356,9 +382,11 @@ const AppState = {
             if (window.sessionService && this.currentSession.sessionCode) {
                 window.sessionService.completeSession(this.currentSession.sessionCode, {
                     summary: this.currentSession.summary,
+                    hardwareSource: this.currentSession.hardwareSource,
+                    agentConnected: this.currentSession.agentConnected,
                     issues: DiagnosticSummaryEngine.extractIssues(this.currentSession)
                 }).catch(error => {
-                    console.error('Failed to sync session completion to Supabase:', error);
+                    console.error('[AppState] Failed to sync session completion to Supabase:', error);
                 });
             }
         }
