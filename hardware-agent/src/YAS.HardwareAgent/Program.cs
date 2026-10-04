@@ -3,10 +3,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.EventLog;
 using YAS.HardwareAgent.Services;
 using YAS.HardwareAgent.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Windows Service hosting
+if (OperatingSystem.IsWindows())
+{
+    builder.Host.UseWindowsService();
+}
 
 // Add configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -15,6 +22,16 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+
+// If running as Windows Service, add Windows Event Log
+if (OperatingSystem.IsWindows())
+{
+    builder.Logging.AddEventLog(settings =>
+    {
+        settings.SourceName = "YAS Hardware Agent";
+        settings.LogName = "Application";
+    });
+}
 
 // Add services
 builder.Services.AddControllers();
@@ -69,5 +86,6 @@ var logger = app.Services.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("YAS Hardware Agent starting...");
 logger.LogInformation("Server URL: {ServerUrl}", serverUrl);
 logger.LogInformation("Allowed CORS origins: {Origins}", string.Join(", ", allowedOrigins));
+logger.LogInformation("Running as Windows Service: {IsWindows}", OperatingSystem.IsWindows());
 
 app.Run(serverUrl);
