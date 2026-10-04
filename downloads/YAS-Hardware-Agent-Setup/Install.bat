@@ -31,6 +31,7 @@ cls
 echo.
 echo ====================================
 echo YAS Hardware Agent Installer v1.0.0
+echo مثبت مساعد YAS لفحص الأجهزة
 echo ====================================
 echo.
 
@@ -45,20 +46,46 @@ echo [*] Checking installation files...
 echo.
 
 :: Verify executable exists in current directory
-if not exist "%~dp0%APP_EXE%" (
-    echo [ERROR] File not found: "%~dp0%APP_EXE%"
-    echo.
-    echo Please make sure you extracted all files from the ZIP archive.
-    echo The following files should be present:
-    echo   - %APP_EXE%
-    echo   - YAS.HardwareAgent.dll
-    echo   - Many other .DLL files
-    echo.
-    pause
-    exit /b 1
+:: يبحث عن الملفات في مجلدات مختلفة
+set "SOURCE_DIR=%~dp0"
+
+REM Try current directory first
+if exist "%SOURCE_DIR%%APP_EXE%" (
+    echo [OK] Installation files found in: %SOURCE_DIR%
+) else (
+    REM Try parent directory (if installer is in subfolder)
+    if exist "%SOURCE_DIR%..\%APP_EXE%" (
+        set "SOURCE_DIR=%SOURCE_DIR%..\%APP_EXE%"
+        cd /d "%SOURCE_DIR%.."
+        set "SOURCE_DIR=!cd!"
+        echo [OK] Installation files found in parent directory
+    ) else if exist "%SOURCE_DIR%..\..\%APP_EXE%" (
+        set "SOURCE_DIR=%SOURCE_DIR%..\..\%APP_EXE%"
+        cd /d "%SOURCE_DIR%..\..\"
+        set "SOURCE_DIR=!cd!"
+        echo [OK] Installation files found in grandparent directory
+    ) else (
+        echo.
+        echo [ERROR] File not found: %APP_EXE%
+        echo.
+        echo Searched in:
+        echo   - %~dp0
+        echo   - %~dp0..
+        echo   - %~dp0..\..
+        echo.
+        echo Please make sure you extracted all files from the ZIP archive.
+        echo The following files should be present:
+        echo   - %APP_EXE%
+        echo   - YAS.HardwareAgent.dll
+        echo   - Many other .DLL files
+        echo.
+        echo ملاحظة: يجب أن تشغل Install.bat من نفس المجلد اللي فيه الملفات
+        echo.
+        pause
+        exit /b 1
+    )
 )
 
-echo [OK] Installation files found
 echo.
 
 :: Create installation directory
@@ -87,7 +114,7 @@ if %errorLevel% equ 0 (
 
 echo.
 echo [*] Copying application files...
-xcopy "%~dp0*" "%INSTALL_PATH%\" /E /I /Y /Q >nul 2>&1
+xcopy "%SOURCE_DIR%*" "%INSTALL_PATH%\" /E /I /Y /Q >nul 2>&1
 if %errorLevel% equ 0 (
     echo [OK] Files copied successfully
 ) else (
@@ -127,25 +154,27 @@ timeout /t 10 /nobreak >nul 2>&1
 echo.
 echo ====================================
 echo Installation Complete!
+echo تم التثبيت بنجاح!
 echo ====================================
 echo.
-echo Installation Details:
-echo   Location: %INSTALL_PATH%
-echo   Version:  1.0.0
-echo   Status:   Ready
+echo Installation Details / تفاصيل التثبيت:
+echo   Location / المكان: %INSTALL_PATH%
+echo   Version / الإصدار:  1.0.0
+echo   Status / الحالة:   Ready / جاهز
 echo.
-echo Next Steps:
-echo   1. Close this window
-echo   2. Open your web browser
-echo   3. Go back to: https://yas-laptop-diagnostic.vercel.app/client/download-agent.html
-echo   4. Click "Verify Installation" button
-echo   5. You should see "✓ Agent Connected"
-echo   6. Now you can run full diagnostics!
+echo Next Steps / الخطوات التالية:
+echo   1. Close this window / أغلق هذه النافذة
+echo   2. Open your web browser / افتح المتصفح
+echo   3. Go to: https://yas-laptop-diagnostic.vercel.app/client/
+echo   4. Click "بدء الفحص" (Start Diagnostic)
+echo   5. يجب أن ترى "✓ متصل بمساعد YAS" (Connected to Agent)
+echo   6. الآن تستطيع تشغيل الفحص الكامل!
 echo.
-echo Notes:
-echo   - Agent will auto-start when you restart Windows
+echo Notes / ملاحظات:
+echo   - Agent will auto-start on Windows restart
+echo   - سيبدأ تلقائياً عند إعادة تشغيل ويندوز
 echo   - To uninstall: Delete C:\Program Files\YAS Hardware Agent
-echo   - For support, visit the main diagnostic website
+echo   - للحذف: احذف المجلد C:\Program Files\YAS Hardware Agent
 echo.
 pause
 

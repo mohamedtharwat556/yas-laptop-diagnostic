@@ -350,14 +350,27 @@
 
             download: function() {
                 console.log('[Installation] Download clicked');
-                const downloadUrl = '/downloads/YAS-Hardware-Agent-Setup/Install.bat';
-                window.location.href = downloadUrl;
+                // Download the installer directly
+                const downloadUrl = '../downloads/YAS-Hardware-Agent-Setup/Install.bat';
+                
+                // Create a link and trigger download
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = 'YAS-Hardware-Agent-Install.bat';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
-                // Enable verify button after download starts
+                console.log('[Installation] Installer download triggered');
+
+                // Enable verify button after download
                 setTimeout(() => {
                     const verifyBtn = document.getElementById('verifyBtn');
                     if (verifyBtn) verifyBtn.disabled = false;
-                }, 1000);
+                    
+                    // Show helpful message
+                    alert('✓ تم تحميل ملف التثبيت\n\nالخطوات:\n1. اذهب لمجلد التحميلات (Downloads)\n2. اضغط right-click على YAS-Hardware-Agent-Install.bat\n3. اختر "Run as Administrator"\n4. اضغط "Yes" على موافقة إدارة النظام\n5. انتظر حتى ينتهي التثبيت\n6. ارجع هنا واضغط "تحقق من التثبيت"');
+                }, 500);
             },
 
             verify: function() {
