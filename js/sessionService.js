@@ -619,9 +619,9 @@ class SessionService {
 }
 
 // Create singleton instance
-const sessionService = new SessionService();
+window.sessionService = new SessionService();
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = sessionService;
+    module.exports = window.sessionService;
 }
