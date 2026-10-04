@@ -251,99 +251,198 @@ const DiagnosticEngine = {
         };
     },
 
-    // Display device info
-    displayDeviceInfo: function(deviceInfo) {
+    // Display device info - BATCH 6B-6: REAL DATA ONLY
+    displayDeviceInfo: function(hardwareData) {
         const container = document.getElementById('deviceInfoGrid');
         if (!container) return;
 
+        console.log('[YAS Diagnostic] Displaying device info from:', hardwareData.source || 'unknown');
+        
+        // BATCH 6B-6: Only display if source is hardware-agent
+        if (hardwareData.source !== 'hardware-agent') {
+            console.error('[YAS Diagnostic] Invalid hardware source - must be hardware-agent');
+            container.innerHTML = '<div style="padding: 20px; text-align: center; color: #dc2626;"><strong>خطأ:</strong> بيانات الجهاز غير صحيحة</div>';
+            return;
+        }
+
         let html = '';
 
-        // Computer info
-        if (deviceInfo.computer) {
-            const mfg = this.getInfoValue(deviceInfo.computer.manufacturer);
-            const model = this.getInfoValue(deviceInfo.computer.model);
-            const devType = this.getInfoValue(deviceInfo.computer.deviceType);
+        // Computer Info Section
+        if (hardwareData.computer) {
+            const mfg = this.getInfoValue(hardwareData.computer.manufacturer);
+            const model = this.getInfoValue(hardwareData.computer.model);
+            const deviceType = this.getInfoValue(hardwareData.computer.deviceType);
             
-            if (mfg || model || devType) {
+            if (mfg || model || deviceType) {
                 html += `<div class="device-info-section">
                     <h3 class="device-info-section-title">معلومات الجهاز</h3>`;
-                if (mfg) html += this.createCard('الشركة المصنعة', mfg);
-                if (model) html += this.createCard('الموديل', model);
-                if (devType) html += this.createCard('نوع الجهاز', devType);
+                if (mfg) html += this.createCard('الشركة المصنعة', mfg, 'hardware-agent');
+                if (model) html += this.createCard('الموديل', model, 'hardware-agent');
+                if (deviceType) html += this.createCard('نوع الجهاز', deviceType, 'hardware-agent');
                 html += '</div>';
             }
         }
 
-        // OS info
-        if (deviceInfo.operatingSystem) {
-            const osName = this.getInfoValue(deviceInfo.operatingSystem.name);
-            if (osName) {
+        // Operating System Section
+        if (hardwareData.operatingSystem) {
+            const osName = this.getInfoValue(hardwareData.operatingSystem.name);
+            const osVersion = this.getInfoValue(hardwareData.operatingSystem.version);
+            const osBuild = this.getInfoValue(hardwareData.operatingSystem.build);
+            
+            if (osName || osVersion) {
                 html += `<div class="device-info-section">
                     <h3 class="device-info-section-title">نظام التشغيل</h3>`;
-                html += this.createCard('النظام', osName);
+                if (osName) html += this.createCard('النظام', osName, 'hardware-agent');
+                if (osVersion) html += this.createCard('الإصدار', osVersion, 'hardware-agent');
+                if (osBuild) html += this.createCard('الـ Build', osBuild, 'hardware-agent');
                 html += '</div>';
             }
         }
 
-        // CPU info
-        if (deviceInfo.cpu) {
-            const cpuName = this.getInfoValue(deviceInfo.cpu.name);
-            const cores = this.getInfoValue(deviceInfo.cpu.cores);
-            if (cpuName || cores) {
+        // CPU Section
+        if (hardwareData.cpu) {
+            const cpuName = this.getInfoValue(hardwareData.cpu.name);
+            const cpuCores = this.getInfoValue(hardwareData.cpu.cores);
+            const cpuLogical = this.getInfoValue(hardwareData.cpu.logicalProcessors);
+            const cpuMaxClock = this.getInfoValue(hardwareData.cpu.maxClockMHz);
+            
+            if (cpuName || cpuCores) {
                 html += `<div class="device-info-section">
                     <h3 class="device-info-section-title">المعالج</h3>`;
-                if (cpuName) html += this.createCard('الموديل', cpuName);
-                if (cores) html += this.createCard('الأنوية', cores);
+                if (cpuName) html += this.createCard('الموديل', cpuName, 'hardware-agent');
+                if (cpuCores) html += this.createCard('الأنوية الفعلية', cpuCores, 'hardware-agent');
+                if (cpuLogical) html += this.createCard('المعالجات المنطقية', cpuLogical, 'hardware-agent');
+                if (cpuMaxClock) html += this.createCard('السرعة القصوى', `${cpuMaxClock} MHz`, 'hardware-agent');
                 html += '</div>';
             }
         }
 
-        // Memory info
-        if (deviceInfo.memory) {
-            const ram = this.getInfoValue(deviceInfo.memory.totalGB);
-            if (ram) {
+        // Memory Section
+        if (hardwareData.memory) {
+            const ramGB = this.getInfoValue(hardwareData.memory.totalGB);
+            const usedGB = this.getInfoValue(hardwareData.memory.usedGB);
+            const availGB = this.getInfoValue(hardwareData.memory.availableGB);
+            
+            if (ramGB) {
                 html += `<div class="device-info-section">
                     <h3 class="device-info-section-title">الذاكرة العشوائية</h3>`;
-                html += this.createCard('الإجمالي', typeof ram === 'number' ? `${ram} GB` : ram);
+                html += this.createCard('الإجمالي', typeof ramGB === 'number' ? `${ramGB} GB` : ramGB, 'hardware-agent');
+                if (usedGB) html += this.createCard('المستخدم', typeof usedGB === 'number' ? `${usedGB} GB` : usedGB, 'hardware-agent');
+                if (availGB) html += this.createCard('المتاح', typeof availGB === 'number' ? `${availGB} GB` : availGB, 'hardware-agent');
                 html += '</div>';
             }
         }
 
-        // Storage info
-        if (deviceInfo.storageWarning) {
+        // GPU Section
+        if (hardwareData.gpu && hardwareData.gpu.length > 0) {
             html += `<div class="device-info-section">
-                <h3 class="device-info-section-title">التخزين</h3>
-                <div class="device-info-card">
-                    <div class="device-info-label">السعة</div>
-                    <div class="device-info-value unavailable">${deviceInfo.storageWarning}</div>
-                </div>
-            </div>`;
+                <h3 class="device-info-section-title">الرسوميات</h3>`;
+            hardwareData.gpu.forEach((gpu, idx) => {
+                const gpuName = this.getInfoValue(gpu.name);
+                const gpuVendor = this.getInfoValue(gpu.vendor);
+                if (gpuName) {
+                    html += this.createCard(idx === 0 ? 'المعالج' : `المعالج ${idx + 1}`, gpuName, 'hardware-agent');
+                }
+                if (gpuVendor) {
+                    html += this.createCard('الصانع', gpuVendor, 'hardware-agent');
+                }
+            });
+            html += '</div>';
         }
 
-        // Browser info (always show)
-        html += `<div class="device-info-section">
-            <h3 class="device-info-section-title">معلومات المتصفح</h3>`;
-        html += this.createCard('المتصفح', deviceInfo.browser);
-        if (deviceInfo.screen) {
-            html += this.createCard('دقة الشاشة', `${deviceInfo.screen.width} × ${deviceInfo.screen.height}`);
+        // Storage Section
+        if (hardwareData.storage && hardwareData.storage.length > 0) {
+            html += `<div class="device-info-section">
+                <h3 class="device-info-section-title">التخزين</h3>`;
+            hardwareData.storage.forEach((disk, idx) => {
+                const diskModel = this.getInfoValue(disk.model);
+                const diskType = this.getInfoValue(disk.type);
+                const diskCapacity = this.getInfoValue(disk.capacityGB);
+                
+                if (diskModel) {
+                    html += this.createCard(idx === 0 ? 'القرص' : `القرص ${idx + 1}`, diskModel, 'hardware-agent');
+                }
+                if (diskType) {
+                    html += this.createCard('النوع', diskType, 'hardware-agent');
+                }
+                if (diskCapacity) {
+                    html += this.createCard('السعة', `${diskCapacity} GB`, 'hardware-agent');
+                }
+            });
+            html += '</div>';
         }
-        html += '</div>';
+
+        // Battery Section
+        if (hardwareData.battery) {
+            const batteryPresent = this.getInfoValue(hardwareData.battery.present);
+            const batteryPercent = this.getInfoValue(hardwareData.battery.percentage);
+            const batteryCharging = this.getInfoValue(hardwareData.battery.charging);
+            
+            if (batteryPresent !== null || batteryPercent !== null) {
+                html += `<div class="device-info-section">
+                    <h3 class="device-info-section-title">البطارية</h3>`;
+                if (batteryPresent === false) {
+                    html += this.createCard('الحالة', 'لا توجد بطارية', 'hardware-agent');
+                } else if (batteryPercent !== null) {
+                    html += this.createCard('المستوى', `${batteryPercent}%`, 'hardware-agent');
+                    if (batteryCharging !== null) {
+                        html += this.createCard('الحالة', batteryCharging ? 'جاري الشحن' : 'غير مشحون', 'hardware-agent');
+                    }
+                }
+                html += '</div>';
+            }
+        }
+
+        // Network Section
+        if (hardwareData.network && hardwareData.network.length > 0) {
+            html += `<div class="device-info-section">
+                <h3 class="device-info-section-title">الشبكة</h3>`;
+            hardwareData.network.forEach((nic, idx) => {
+                const nicName = this.getInfoValue(nic.name);
+                const nicType = this.getInfoValue(nic.type);
+                const nicMac = this.getInfoValue(nic.macAddress);
+                
+                if (nicName) {
+                    html += this.createCard(idx === 0 ? 'الواجهة' : `الواجهة ${idx + 1}`, nicName, 'hardware-agent');
+                }
+                if (nicType) {
+                    html += this.createCard('النوع', nicType, 'hardware-agent');
+                }
+            });
+            html += '</div>';
+        }
+
+        // Source badge
+        html += `<div class="device-info-section">
+            <div style="padding: 12px; background: #f0fdf4; border-radius: 6px; border-left: 4px solid #10b981;">
+                <span style="color: #059669; font-weight: 500;">✓ مصدر البيانات: مساعد YAS Hardware Agent</span>
+            </div>
+        </div>`;
 
         container.innerHTML = html;
     },
 
-    createCard: function(label, value) {
-        const unavailable = !value || value === 'غير متاح' || (typeof value === 'string' && value.includes('غير متاح'));
+    createCard: function(label, value, source) {
+        if (!value || value === 'غير متاح') {
+            return `<div class="device-info-card">
+                <div class="device-info-label">${label}</div>
+                <div class="device-info-value unavailable">غير متاح</div>
+            </div>`;
+        }
+        
+        const sourceBadgeText = source === 'hardware-agent' ? 'Agent' : source;
         return `<div class="device-info-card">
             <div class="device-info-label">${label}</div>
-            <div class="device-info-value ${unavailable ? 'unavailable' : ''}">${value || 'غير متاح'}</div>
+            <div class="device-info-value">${value}</div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">من ${sourceBadgeText}</div>
         </div>`;
     },
 
     getInfoValue: function(field) {
         if (!field) return null;
         if (typeof field === 'object' && field.value !== undefined) return field.value;
-        return field;
+        if (typeof field === 'string' && field.length > 0) return field;
+        return null;
     },
 
     // Display tests list
