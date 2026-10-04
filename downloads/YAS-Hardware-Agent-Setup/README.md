@@ -1,148 +1,174 @@
-# YAS Hardware Agent Installer
+# مساعد فحص الجهاز - YAS Hardware Agent
+## دليل التثبيت والاستخدام
 
-## Overview
+---
 
-This directory contains the installation files and scripts for YAS Hardware Agent.
+## 📥 ماذا تحتوي هذه الحزمة؟
 
-## Files
+هذه الحزمة تحتوي على جميع الملفات اللازمة لتثبيت **مساعد فحص الجهاز** على جهازك الكمبيوتر.
 
-- **Install.bat** - Main installer (double-click to run)
-- **Install-YASHardwareAgent.ps1** - PowerShell installation script
-- **setup-autostart.bat** - Auto-start configuration utility
-- **YAS-Hardware-Agent.nsi** - NSIS installer script (for future builds)
+### الملفات الرئيسية:
+- **`Install.bat`** - برنامج التثبيت السهل (اضغط عليه لتثبيت)
+- **`INSTALL-EASY.bat`** - نسخة محسنة من برنامج التثبيت
+- **`Install-YASHardwareAgent.ps1`** - برنامج تثبيت متقدم (PowerShell)
+- **`YAS.HardwareAgent.exe`** - البرنامج الرئيسي (المساعد)
+- **مئات ملفات .DLL** - المكتبات المطلوبة (لا تحتاج إلى حذفها)
 
-## Installation
+---
 
-### Method 1: Simple Installation (Recommended)
+## 🚀 خطوات التثبيت السريعة
 
-1. Right-click **Install.bat**
-2. Select **"Run as Administrator"**
-3. Follow the on-screen instructions
-4. The agent will start automatically
+### الطريقة الأولى: الطريقة السهلة (موصى بها)
 
-### Method 2: PowerShell Installation
+1. **افتح هذا المجلد** وتأكد من وجود جميع الملفات
+2. **انقر بزر الماوس الأيمن** على ملف `Install.bat`
+3. **اختر "Run as Administrator"** (تشغيل كمسؤول)
+4. **اضغط على "Yes"** إذا طلبت الصلاحيات
+5. **انتظر** حتى تظهر رسالة "Installation Complete!"
+6. **اضغط Enter** لإغلاق النافذة
 
-1. Right-click PowerShell
-2. Select **"Run as Administrator"**
-3. Run this command:
+✅ **تم التثبيت!** الآن المساعد يعمل على جهازك.
+
+### الطريقة الثانية: استخدام PowerShell (متقدم)
+
+1. **افتح PowerShell كمسؤول**
+2. **انتقل إلى هذا المجلد:**
    ```powershell
-   cd "C:\path\to\installer"
-   Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+   cd "C:\path\to\this\folder"
+   ```
+3. **نفّذ هذا الأمر:**
+   ```powershell
    .\Install-YASHardwareAgent.ps1
    ```
 
-## What Gets Installed
+---
 
-- Application files in: `C:\Program Files\YAS Hardware Agent`
-- Registry entries for auto-detection
-- Windows Task Scheduler task for auto-start
-- Desktop shortcut (optional)
+## ✓ التحقق من التثبيت
 
-## Verification
+بعد التثبيت مباشرة:
 
-After installation:
+1. **افتح متصفحك**
+2. **اذهب إلى:** https://yas-laptop-diagnostic.vercel.app/client/download-agent.html
+3. **اضغط على زر "إعادة التحقق"**
+4. **يجب أن تظهر رسالة:** "✓ مساعد فحص الجهاز متصل"
 
-1. Go to https://yas-laptop-diagnostic.vercel.app
-2. Click **"Verify Installation"**
-3. If successful, you'll see: ✓ **Agent Connected**
+إذا لم تظهر الرسالة:
+- تأكد من أن النافذة السوداء (Command Prompt) قد أغلقت بنجاح
+- انتظر 10 ثوان ثم حاول مجدداً
+- إعادة تشغيل الجهاز قد تحل المشكلة
 
-## Uninstallation
+---
 
-### Method 1: Control Panel
+## 🔍 استكشاف الأخطاء
 
-1. Go to Settings → Apps → Apps & Features
-2. Find "YAS Hardware Agent"
-3. Click Uninstall
+### المشكلة: "تم رفض الوصول" (Access Denied)
 
-### Method 2: PowerShell
+**الحل:**
+1. تأكد من تشغيل برنامج التثبيت كمسؤول
+2. ربما يكون Windows Defender أو برنامج مكافحة الفيروسات يحجب التثبيت
+3. أضف المجلد إلى قائمة الاستثناءات في برنامج الحماية
 
-Run this command as Administrator:
+### المشكلة: "الملفات ناقصة" (Files Missing)
 
-```powershell
-C:\Program Files\YAS Hardware Agent\Uninstall.ps1
-```
+**الحل:**
+1. تأكد من استخراج جميع الملفات من ملف ZIP
+2. تأكد من وجود ملف `YAS.HardwareAgent.exe` في نفس المجلد
+3. حمّل الحزمة مجدداً من الموقع
 
-### Method 3: Manual
+### المشكلة: "المساعد لا يعمل" (Agent Not Running)
 
-1. Stop the agent:
-   ```cmd
-   taskkill /IM YAS.HardwareAgent.exe /F
-   ```
+**الحل:**
+1. افتح Task Manager (اضغط Ctrl+Shift+Esc)
+2. ابحث عن `YAS.HardwareAgent.exe`
+3. إذا كان موجوداً: البرنامج يعمل بشكل صحيح
+4. إذا لم يكن موجوداً: حاول تشغيل التثبيت مجدداً
 
-2. Remove scheduled task:
-   ```cmd
-   schtasks /delete /tn "YAS Hardware Agent" /f
-   ```
+### المشكلة: "الموقع يقول: غير متصل" (Disconnected)
 
-3. Delete folder: `C:\Program Files\YAS Hardware Agent`
+**الحل:**
+1. تأكد من تشغيل برنامج التثبيت كمسؤول
+2. تأكد من أن Windows Defender لا يحجب البرنامج:
+   - Settings → Virus & threat protection
+   - اضغط "Manage settings"
+   - أضف البرنامج إلى قائمة الاستثناءات
+3. إعادة تشغيل الجهاز
 
-4. Delete registry key:
-   ```cmd
-   reg delete "HKEY_CURRENT_USER\Software\YAS\HardwareAgent" /f
-   ```
+---
 
-## Troubleshooting
+## 🖥️ معلومات النظام المطلوبة
 
-### Installation requires Administrator privileges
+- **نظام التشغيل:** Windows 10 أو Windows 11
+- **المتطلبات:** صلاحيات المسؤول للتثبيت
+- **المساحة:** 200 MB تقريباً
+- **.NET Framework:** مرفق مع التثبيت (لا تحتاج تنزيل إضافي)
 
-The installer needs administrator rights to:
-- Create files in Program Files
-- Setup Windows Task Scheduler
-- Configure registry
+---
 
-**Solution:** Right-click Install.bat and select "Run as Administrator"
+## 🚀 بدء الفحص
 
-### Agent not starting after installation
+بعد تثبيت المساعد:
 
-**Solution:** 
-1. Open Task Scheduler (press Windows+R, type `taskschd.msc`)
-2. Find "YAS Hardware Agent" task
-3. Right-click and select "Run"
+1. **اذهب إلى الموقع:** https://yas-laptop-diagnostic.vercel.app
+2. **اضغط على "بدء الفحص"**
+3. **سيظهر لك معلومات دقيقة عن جهازك:**
+   - المعالج (CPU)
+   - الذاكرة (RAM)
+   - كرت الشاشة (GPU)
+   - التخزين
+   - البطارية
+   - النظام و المزيد...
 
-### Port 5275 already in use
+---
 
-If another application is using port 5275:
+## 🔄 الإزالة (Uninstall)
 
-1. Edit `C:\Program Files\YAS Hardware Agent\appsettings.json`
-2. Change the Port value to an unused port (e.g., 5276)
-3. Restart the agent:
-   ```cmd
-   taskkill /IM YAS.HardwareAgent.exe /F
-   ```
-4. Start the agent again via Task Scheduler
+إذا أردت إزالة المساعد:
 
-### Agent crashes on startup
+1. **اضغط Windows + R**
+2. **اكتب:** `%ProgramFiles%`
+3. **ابحث عن مجلد:** "YAS Hardware Agent"
+4. **حذف المجلد**
+5. **اضغط Windows + R** وأكتب: `regedit`
+6. **اذهب إلى:** `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run`
+7. **حذف الـ entry باسم:** "YAS Hardware Agent"
 
-Check the Windows Event Viewer for detailed error messages:
-1. Press Windows+R
-2. Type `eventvwr`
-3. Look for entries from "Task Scheduler" related to "YAS Hardware Agent"
+---
 
-### Cannot verify installation
+## 📞 الدعم والمساعدة
 
-If verification fails:
-1. Ensure no firewall is blocking localhost:5275
-2. Check Task Scheduler to ensure the task is running
-3. Open Command Prompt and run:
-   ```cmd
-   curl http://127.0.0.1:5275/api/health
-   ```
+إذا واجهت مشكلة:
 
-## Version Information
+1. **تحقق من الموقع:** https://yas-laptop-diagnostic.vercel.app
+2. **اضغط على زر "Verify Installation"**
+3. **اتبع التعليمات المعروضة**
+4. **أو تواصل مع فريق الدعم**
 
-- **Agent Version:** 1.0.0
-- **Installer Version:** 1.0.0
-- **Compatible with:** Windows 10, Windows 11
-- **Required:** .NET 8.0 Runtime (auto-extracted)
+---
 
-## Security
+## ℹ️ معلومات إضافية
 
-- Agent runs on localhost (127.0.0.1) only
-- No internet access required
-- No credentials or sensitive data exposed
-- Read-only hardware information
-- No arbitrary command execution
+- **الإصدار:** 1.0.0
+- **الحجم:** 0.14 MB (البرنامج الرئيسي) + مكتبات
+- **الحالة:** آمن وموثوق - يعمل محلياً فقط
+- **الخصوصية:** جميع البيانات تبقى على جهازك
 
-## Support
+---
 
-For issues or questions, contact the YAS support team.
+## ✅ ملاحظات مهمة
+
+- ✓ المساعد يبدأ تلقائياً عند تشغيل الجهاز
+- ✓ المساعد يعمل بدون إنترنت
+- ✓ آمن تماماً - لا يرسل بيانات شخصية
+- ✓ يمكن إزالته بسهولة في أي وقت
+
+---
+
+## تاريخ الإصدار
+
+**تاريخ:** أكتوبر 2026  
+**الإصدار:** 1.0.0  
+**الحالة:** Production Ready
+
+---
+
+**شكراً لاستخدام نظام فحص أجهزة YAS!**
