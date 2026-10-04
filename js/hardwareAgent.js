@@ -147,43 +147,62 @@ const HardwareAgent = {
             const response = await fetch(`${baseURL}/api/health`, fetchOptions);
             clearTimeout(timeoutId);
 
+            // BATCH 6B-6: Validate response properly
             if (response.ok) {
-                const data = await response.json();
-                if (data.status === 'ok') {
-                    this.isConnected = true;
-                    this.agentInfo = data;
-                    this.setState(AgentState.CONNECTED);
-                    console.log('[YAS Agent] Detection result: CONNECTED');
-                    console.log('[YAS Agent] Agent info:', data);
-                    return true;
+                try {
+                    const data = await response.json();
+                    if (data.status === 'ok' && data.agent === 'YAS Hardware Agent') {
+                        this.isConnected = true;
+                        this.agentInfo = data;
+                        this.setState(AgentState.CONNECTED);
+                        console.log('[YAS Agent] Detection result: CONNECTED');
+                        return true;
+                    } else {
+                        console.log('[YAS Agent] Invalid response format:', data);
+                        this.setState(AgentState.ERROR);
+                        return false;
+                    }
+                } catch (parseError) {
+                    console.error('[YAS Agent] Failed to parse response:', parseError);
+                    this.setState(AgentState.ERROR);
+                    return false;
                 }
             } else {
                 console.log('[YAS Agent] HTTP error:', response.status);
+                this.setState(AgentState.DISCONNECTED);
+                return false;
             }
         } catch (error) {
-            console.error('[YAS Agent] Connection failed:', error.message);
+            console.error('[YAS Agent] Connection error:', error.name, error.message);
             
-            // Diagnose specific error
+            // Diagnose specific error - NO TECHNICAL DETAILS IN UI
             if (error.name === 'AbortError') {
                 console.log('[YAS Agent] Timeout - Agent not responding');
+                this.setState(AgentState.DISCONNECTED);
             } else if (error.message.includes('Failed to fetch')) {
-                console.log('[YAS Agent] Fetch failed - checking if permission required');
+                console.log('[YAS Agent] Fetch failed');
                 
                 // Check if we're on HTTPS
                 if (window.location.protocol === 'https:') {
-                    console.log('[YAS Agent] Running on HTTPS - Local Network Access may require permission');
+                    console.log('[YAS Agent] Running on HTTPS - may need local network permission');
                     this.setState(AgentState.PERMISSION_REQUIRED);
                     return false;
                 }
+                this.setState(AgentState.DISCONNECTED);
             } else if (error.message.includes('CORS')) {
-                console.log('[YAS Agent] CORS error - Check agent CORS configuration');
+                console.log('[YAS Agent] CORS configuration issue');
+                this.setState(AgentState.ERROR);
+            } else {
+                console.log('[YAS Agent] Unknown error:', error.message);
+                this.setState(AgentState.ERROR);
             }
         }
 
         this.isConnected = false;
         this.agentInfo = null;
-        this.setState(AgentState.DISCONNECTED);
-        console.log('[YAS Agent] Final state: DISCONNECTED');
+        if (this.currentState !== AgentState.PERMISSION_REQUIRED) {
+            this.setState(AgentState.DISCONNECTED);
+        }
         return false;
     },
 
@@ -235,32 +254,53 @@ const HardwareAgent = {
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), HARDWARE_AGENT_CONFIG.timeout);
+            const timeoutId = setTimeout(() => {
+                console.log('[YAS Agent] Hardware fetch timeout');
+                controller.abort();
+            }, HARDWARE_AGENT_CONFIG.timeout);
 
-            const response = await fetch(`${baseURL}/api/hardware`, {
+            const fetchOptions = {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 signal: controller.signal
-            });
+            };
 
+            // Add targetAddressSpace for loopback
+            if (baseURL.includes('127.0.0.1') || baseURL.includes('localhost')) {
+                fetchOptions.targetAddressSpace = 'loopback';
+            }
+
+            const response = await fetch(`${baseURL}/api/hardware`, fetchOptions);
             clearTimeout(timeoutId);
 
             if (response.ok) {
-                const data = await response.json();
-                console.log('[YAS Agent] Hardware data received');
-                this.lastHardwareData = data;
-                this.setState(AgentState.COMPLETED);
-                return this.normalizeHardwareData(data);
+                try {
+                    const data = await response.json();
+                    console.log('[YAS Agent] Hardware data received');
+                    this.lastHardwareData = data;
+                    this.setState(AgentState.COMPLETED);
+                    return this.normalizeHardwareData(data);
+                } catch (parseError) {
+                    console.error('[YAS Agent] Failed to parse hardware data:', parseError);
+                    this.setState(AgentState.ERROR);
+                    return this.handleInvalidResponse('Invalid response format from Agent');
+                }
             } else {
                 console.log('[YAS Agent] Hardware fetch returned error:', response.status);
                 this.setState(AgentState.ERROR);
                 return this.handleInvalidResponse('Agent returned error');
             }
         } catch (error) {
-            console.error('[YAS Agent] Hardware fetch error:', error.message);
+            console.error('[YAS Agent] Hardware fetch error:', error.name, error.message);
             this.setState(AgentState.ERROR);
+            
+            if (error.name === 'AbortError') {
+                console.log('[YAS Agent] Hardware fetch timed out');
+                return this.handleAgentUnavailable('Request timeout');
+            }
+            
             return this.handleAgentUnavailable(error.message);
         }
     },

@@ -35,22 +35,24 @@ const Client = {
             
             // معالجة إرسال النموذج (only if not already handled by index.html Agent check)
             form.addEventListener('submit', async (e) => {
-                // Check if Agent pre-check already validated (flag set in index.html)
-                if (!window.agentPreCheckPassed) {
-                    // This is for direct access to client/index.html without Agent check
-                    e.preventDefault();
-                    console.log('[ClientForm] No pre-check detected - Agent validation required');
-                    alert('يجب التحقق من مساعد YAS أولاً');
-                    window.location.href = 'installation-required.html';
-                    return;
-                }
-
-                // Agent already verified, proceed with form submission
                 e.preventDefault();
-                console.log('[ClientForm] Agent pre-check passed, proceeding with form submission');
+                
+                try {
+                    // Check if Agent pre-check already validated (flag set in index.html)
+                    if (!window.agentPreCheckPassed) {
+                        // This is for direct access to client/index.html without Agent check
+                        console.log('[ClientForm] No pre-check detected - Agent validation required');
+                        throw new Error('Agent verification required');
+                    }
 
-                if (this.validateForm(form)) {
-                    console.log('Form validation passed');
+                    // Agent already verified, proceed with form submission
+                    console.log('[ClientForm] Agent pre-check passed, proceeding with form submission');
+
+                    if (!this.validateForm(form)) {
+                        console.log('[ClientForm] Form validation failed');
+                        throw new Error('Invalid form data');
+                    }
+
                     const formData = new FormData(form);
                     const sessionData = {
                         customerName: formData.get('customerName'),
@@ -62,40 +64,49 @@ const Client = {
                     const submitBtn = form.querySelector('button[type="submit"]');
                     const originalBtnText = submitBtn.innerHTML;
 
-                    try {
-                        // Disable button and show loading state
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = 'جاري إنشاء جلسة الفحص...';
+                    // Disable button and show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = 'جاري إنشاء جلسة الفحص...';
 
-                        console.log('Creating session with data:', sessionData);
-                        // إضافة جلسة جديدة (with Supabase fallback)
-                        const session = await AppState.addSession(sessionData);
+                    console.log('[ClientForm] Creating session');
+                    // إضافة جلسة جديدة (with Supabase fallback)
+                    const session = await AppState.addSession(sessionData);
 
-                        // Verify session was created
-                        if (!session || !session.sessionCode) {
-                            console.error('Session creation returned invalid session:', session);
-                            alert('تعذر إنشاء جلسة الفحص. يرجى المحاولة مرة أخرى.');
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalBtnText;
-                            return;
-                        }
+                    // Verify session was created
+                    if (!session || !session.sessionCode) {
+                        console.error('[ClientForm] Invalid session returned:', session);
+                        throw new Error('Session creation failed - invalid response');
+                    }
 
-                        console.log('✅ Session created successfully:', {
-                            sessionCode: session.sessionCode,
-                            syncStatus: session.syncStatus,
-                            online: navigator.onLine
-                        });
+                    console.log('[ClientForm] ✅ Session created:', {
+                        sessionCode: session.sessionCode,
+                        syncStatus: session.syncStatus
+                    });
 
-                        // الانتقال إلى صفحة الفحص
-                        window.location.href = 'diagnostic.html';
-                    } catch (error) {
-                        console.error('Session creation failed:', error);
-                        alert(`تعذر إنشاء جلسة الفحص: ${error.message}`);
+                    // الانتقال إلى صفحة الفحص
+                    window.location.href = 'diagnostic.html';
+                } catch (error) {
+                    console.error('[ClientForm] Error:', error.message);
+                    
+                    // Show user-friendly error message
+                    let userMessage = 'تعذر إنشاء جلسة الفحص';
+                    
+                    if (error.message.includes('Agent')) {
+                        userMessage = 'يجب التحقق من مساعد YAS أولاً';
+                    } else if (error.message.includes('Invalid')) {
+                        userMessage = 'تحقق من صحة البيانات المدخلة';
+                    } else if (error.message.includes('Network')) {
+                        userMessage = 'تحقق من اتصالك بالإنترنت';
+                    }
+                    
+                    alert(userMessage);
+                    
+                    // Reset button
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalBtnText;
                     }
-                } else {
-                    console.log('Form validation failed');
                 }
             });
         }

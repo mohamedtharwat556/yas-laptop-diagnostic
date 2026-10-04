@@ -139,9 +139,38 @@ const DiagnosticEngine = {
                 <p style="font-size: 16px; color: #6b7280; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
                     لا يمكن بدء الفحص الكامل دون تثبيت واتصال مساعد YAS.
                 </p>
+                <p style="font-size: 14px; color: #9ca3af; margin-bottom: 24px;">
+                    تأكد من تثبيت المساعد وتشغيل الخدمة ثم حاول مرة أخرى.
+                </p>
                 <button onclick="window.location.href='installation-required.html'" 
-                    style="padding: 14px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    style="padding: 14px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-right: 12px;">
                     ذهاب إلى صفحة التثبيت
+                </button>
+                <button onclick="location.reload()" 
+                    style="padding: 14px 32px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    إعادة محاولة
+                </button>
+            </div>
+        `;
+    },
+
+    // Display error message
+    displayError: function(title, message) {
+        const container = document.getElementById('clientContent') || document.querySelector('.client-content');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
+                <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 16px; color: #dc2626;">
+                    ${title}
+                </h2>
+                <p style="font-size: 16px; color: #6b7280; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    ${message}
+                </p>
+                <button onclick="location.reload()" 
+                    style="padding: 14px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    إعادة المحاولة
                 </button>
             </div>
         `;
