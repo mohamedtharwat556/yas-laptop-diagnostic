@@ -41,6 +41,8 @@ builder.Services.AddScoped<IGpuInfoService, GpuInfoService>();
 builder.Services.AddScoped<IStorageInfoService, StorageInfoService>();
 builder.Services.AddScoped<IBatteryInfoService, BatteryInfoService>();
 builder.Services.AddScoped<INetworkInfoService, NetworkInfoService>();
+builder.Services.AddScoped<IMotherboardInfoService, MotherboardInfoService>();
+builder.Services.AddScoped<IBiosInfoService, BiosInfoService>();
 
 // Add health checks
 builder.Services.AddHealthChecks();

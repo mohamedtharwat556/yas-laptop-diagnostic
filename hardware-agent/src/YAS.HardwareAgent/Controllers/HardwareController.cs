@@ -21,6 +21,8 @@ public class HardwareController : ControllerBase
     private readonly IStorageInfoService _storageInfoService;
     private readonly IBatteryInfoService _batteryInfoService;
     private readonly INetworkInfoService _networkInfoService;
+    private readonly IMotherboardInfoService _motherboardInfoService;
+    private readonly IBiosInfoService _biosInfoService;
 
     public HardwareController(
         ILogger<HardwareController> logger,
@@ -31,7 +33,9 @@ public class HardwareController : ControllerBase
         IGpuInfoService gpuInfoService,
         IStorageInfoService storageInfoService,
         IBatteryInfoService batteryInfoService,
-        INetworkInfoService networkInfoService)
+        INetworkInfoService networkInfoService,
+        IMotherboardInfoService motherboardInfoService,
+        IBiosInfoService biosInfoService)
     {
         _logger = logger;
         _computerInfoService = computerInfoService;
@@ -42,6 +46,8 @@ public class HardwareController : ControllerBase
         _storageInfoService = storageInfoService;
         _batteryInfoService = batteryInfoService;
         _networkInfoService = networkInfoService;
+        _motherboardInfoService = motherboardInfoService;
+        _biosInfoService = biosInfoService;
     }
 
     /// <summary>
@@ -129,6 +135,24 @@ public class HardwareController : ControllerBase
             _logger.LogError(ex, "Failed to collect network information");
         }
 
+        try
+        {
+            response.Motherboard = await _motherboardInfoService.GetMotherboardInfoAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to collect motherboard information");
+        }
+
+        try
+        {
+            response.Bios = await _biosInfoService.GetBiosInfoAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to collect BIOS information");
+        }
+
         response.Metadata = new HardwareMetadata
         {
             Source = "hardware-agent",
@@ -138,5 +162,30 @@ public class HardwareController : ControllerBase
         _logger.LogInformation("Hardware information collected successfully");
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// GET /api/hardware/normalized
+    /// Get complete hardware information with source and confidence tracking
+    /// This endpoint returns the same data as /api/hardware but with metadata
+    /// </summary>
+    [HttpGet("hardware/normalized")]
+    public async Task<ActionResult<NormalizedHardwareResponse>> GetHardwareNormalized(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Normalized hardware information requested");
+
+        // Get raw hardware response
+        var hardwareResult = await GetHardware(cancellationToken);
+        if (hardwareResult.Value == null)
+        {
+            return Ok(new NormalizedHardwareResponse());
+        }
+
+        // Normalize the response
+        var normalized = HardwareNormalizerService.Normalize(hardwareResult.Value);
+
+        _logger.LogInformation("Hardware information normalized successfully");
+
+        return Ok(normalized);
     }
 }

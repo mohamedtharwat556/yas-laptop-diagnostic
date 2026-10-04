@@ -13,5 +13,7 @@ public class HardwareResponse
     public List<StorageInfo> Storage { get; set; } = new();
     public BatteryInfo Battery { get; set; } = new();
     public List<NetworkInfo> Network { get; set; } = new();
+    public MotherboardInfo Motherboard { get; set; } = new();
+    public BiosInfo Bios { get; set; } = new();
     public HardwareMetadata Metadata { get; set; } = new();
 }
