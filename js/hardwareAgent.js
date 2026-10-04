@@ -107,16 +107,16 @@ const HardwareAgent = {
     // Check if agent is available (Health Check)
     // Supports Loopback Network Access for HTTPS → localhost
     detectAgent: async function() {
-        console.log('[Agent] Detecting agent...');
+        console.log('[YAS Agent] Detection started');
         this.setState(AgentState.CHECKING);
         
         const baseURL = HARDWARE_AGENT_CONFIG.getBaseURL();
-        console.log(`[Agent] Base URL: ${baseURL}`);
+        console.log('[YAS Agent] Checking:', baseURL + '/api/health');
 
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => {
-                console.log('[Agent] Health check timeout');
+                console.log('[YAS Agent] Health check timeout');
                 controller.abort();
             }, HARDWARE_AGENT_CONFIG.timeout);
 
@@ -131,14 +131,12 @@ const HardwareAgent = {
             };
 
             // Add targetAddressSpace for loopback network access
-            // This allows HTTPS sites to access http://127.0.0.1 safely
             if (baseURL.includes('127.0.0.1') || baseURL.includes('localhost')) {
-                console.log('[Agent] Targeting loopback address space');
+                console.log('[YAS Agent] Targeting loopback address space');
                 fetchOptions.targetAddressSpace = 'loopback';
             }
 
             const response = await fetch(`${baseURL}/api/health`, fetchOptions);
-
             clearTimeout(timeoutId);
 
             if (response.ok) {
@@ -147,34 +145,37 @@ const HardwareAgent = {
                     this.isConnected = true;
                     this.agentInfo = data;
                     this.setState(AgentState.CONNECTED);
-                    console.log('[Agent] Connected successfully:', data);
+                    console.log('[YAS Agent] Detection result: CONNECTED');
+                    console.log('[YAS Agent] Agent info:', data);
                     return true;
                 }
+            } else {
+                console.log('[YAS Agent] HTTP error:', response.status);
             }
         } catch (error) {
-            console.log(`[Agent] Detection failed: ${error.message}`);
+            console.error('[YAS Agent] Connection failed:', error.message);
             
             // Diagnose specific error
             if (error.name === 'AbortError') {
-                console.log('[Agent] Timeout - Agent not responding');
+                console.log('[YAS Agent] Timeout - Agent not responding');
             } else if (error.message.includes('Failed to fetch')) {
-                // Could be: Local Network Access permission, CORS, or agent not running
-                console.log('[Agent] Fetch failed - Could be permission or network issue');
+                console.log('[YAS Agent] Fetch failed - checking if permission required');
                 
                 // Check if we're on HTTPS
                 if (window.location.protocol === 'https:') {
-                    console.log('[Agent] Running on HTTPS - Local Network Access may require permission');
+                    console.log('[YAS Agent] Running on HTTPS - Local Network Access may require permission');
                     this.setState(AgentState.PERMISSION_REQUIRED);
                     return false;
                 }
             } else if (error.message.includes('CORS')) {
-                console.log('[Agent] CORS error - Check agent CORS configuration');
+                console.log('[YAS Agent] CORS error - Check agent CORS configuration');
             }
         }
 
         this.isConnected = false;
         this.agentInfo = null;
         this.setState(AgentState.DISCONNECTED);
+        console.log('[YAS Agent] Final state: DISCONNECTED');
         return false;
     },
 
@@ -217,10 +218,11 @@ const HardwareAgent = {
         const baseURL = HARDWARE_AGENT_CONFIG.getBaseURL();
         
         if (!this.isConnected) {
-            console.log('[Agent] Not connected, cannot collect hardware');
+            console.log('[YAS Agent] Not connected, cannot collect hardware');
             return this.handleAgentUnavailable('Agent not connected');
         }
 
+        console.log('[YAS Agent] Fetching hardware data');
         this.setState(AgentState.COLLECTING);
 
         try {
@@ -239,14 +241,17 @@ const HardwareAgent = {
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('[YAS Agent] Hardware data received');
                 this.lastHardwareData = data;
                 this.setState(AgentState.COMPLETED);
                 return this.normalizeHardwareData(data);
             } else {
+                console.log('[YAS Agent] Hardware fetch returned error:', response.status);
                 this.setState(AgentState.ERROR);
                 return this.handleInvalidResponse('Agent returned error');
             }
         } catch (error) {
+            console.error('[YAS Agent] Hardware fetch error:', error.message);
             this.setState(AgentState.ERROR);
             return this.handleAgentUnavailable(error.message);
         }
