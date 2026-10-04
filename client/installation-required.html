@@ -395,6 +395,13 @@
                             console.log('[Installation] Agent detected!');
                             this.onAgentConnected();
                         } else {
+                            // Check if permission required
+                            if (HardwareAgent.state === 'PERMISSION_REQUIRED') {
+                                console.log('[Installation] Permission required for local network access');
+                                this.showPermissionPrompt();
+                                return;
+                            }
+                            
                             this.retryCount++;
                             if (this.retryCount < this.maxRetries) {
                                 const delay = Math.min(5000, 500 + this.retryCount * 200);
@@ -415,6 +422,30 @@
                             this.onVerifyFailed();
                         }
                     });
+            },
+
+            showPermissionPrompt: function() {
+                console.log('[Installation] Showing permission prompt');
+                this.verifying = false;
+                
+                const statusEl = document.getElementById('installStatus');
+                statusEl.classList.add('error');
+                statusEl.style.display = 'block';
+                
+                document.getElementById('installStatusText').innerHTML = `
+                    ⚠️ يحتاج السماح بالوصول المحلي<br>
+                    <small style="font-size: 0.9em; color: #6b7280;">المتصفح قد يطلب سماح للوصول إلى المساعد المحلي. يرجى قبول الطلب إذا ظهر.</small>
+                `;
+                
+                this.updateStatusDot('disconnected');
+                document.getElementById('statusText').textContent = 'يتطلب إذن للوصول للمساعد المحلي';
+                
+                // Retry after user sees message (they may grant permission)
+                setTimeout(() => {
+                    console.log('[Installation] Retrying after permission prompt');
+                    this.retryCount = 0;
+                    this.startPolling();
+                }, 3000);
             },
 
             onAgentConnected: function() {

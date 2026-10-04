@@ -138,9 +138,11 @@ const HardwareAgent = {
                 signal: controller.signal
             };
 
-            // Add targetAddressSpace for loopback network access
+            // Add targetAddressSpace for loopback network access (required for HTTPS → localhost)
             if (baseURL.includes('127.0.0.1') || baseURL.includes('localhost')) {
                 console.log('[YAS Agent] Targeting loopback address space');
+                // This tells the browser we're trying to access a private/local network
+                // The browser may prompt the user for permission on HTTPS sites
                 fetchOptions.targetAddressSpace = 'loopback';
             }
 
