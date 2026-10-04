@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مساعد YAS مطلوب - YAS Laptop Diagnostic</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/client.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <style>
+        .installation-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .installation-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .installation-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .installation-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .installation-features {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: right;
+        }
+
+        .installation-features h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .installation-features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .installation-features li {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 12px;
+            padding-right: 24px;
+            position: relative;
+        }
+
+        .installation-features li:before {
+            content: "✓";
+            position: absolute;
+            right: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .installation-steps {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: right;
+        }
+
+        .installation-steps h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .installation-step {
+            display: flex;
+            flex-direction: row-reverse;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .installation-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-right: 12px;
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .installation-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .installation-actions button {
+            padding: 14px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-download {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #2563eb;
+        }
+
+        .btn-verify {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-verify:hover {
+            background: #059669;
+        }
+
+        .btn-verify:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .installation-status {
+            margin-top: 24px;
+            padding: 16px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+            display: none;
+        }
+
+        .installation-status.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .installation-status-text {
+            font-size: 14px;
+            color: #059669;
+        }
+
+        .installation-status.error .installation-status-text {
+            color: #dc2626;
+        }
+
+        .status-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #10b981;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        .installation-status.error .status-spinner {
+            border-color: #dc2626;
+            border-top-color: transparent;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .agent-status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.checking {
+            background: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.verifying {
+            background: #3b82f6;
+            animation: pulse 0.8s infinite;
+        }
+
+        .status-dot.connected {
+            background: #10b981;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="client-body">
+    <div class="client-container">
+        <!-- Header -->
+        <header class="client-header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="4" width="36" height="24" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="30" width="28" height="4" rx="1" stroke="currentColor" stroke-width="2"/>
+                    <rect x="6" y="8" width="28" height="16" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <span class="logo-text">YAS Diagnostic</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="client-main">
+            <div class="installation-container">
+                <div class="agent-status-indicator">
+                    <span class="status-dot checking" id="statusDot"></span>
+                    <span class="status-text" id="statusText">جاري التحقق من مساعد YAS...</span>
+                </div>
+
+                <div class="installation-icon">📦</div>
+
+                <h1 class="installation-title">مساعد YAS مطلوب</h1>
+
+                <p class="installation-description">
+                    للحصول على بيانات حقيقية ودقيقة عن جهازك، يجب تثبيت مساعد فحص YAS على هذا الكمبيوتر.
+                    <br><br>
+                    المساعد يقرأ معلومات الجهاز الحقيقية من Windows بشكل آمن ثم يرسلها إلى صفحة الفحص.
+                </p>
+
+                <div class="installation-features">
+                    <h3>ما الذي سيقوم به المساعد؟</h3>
+                    <ul>
+                        <li>قراءة معلومات الجهاز الحقيقية فقط</li>
+                        <li>فحص مكونات الجهاز بدقة</li>
+                        <li>عدم رفع أي ملفات شخصية</li>
+                        <li>عدم تنفيذ أي أوامر عشوائية</li>
+                        <li>العمل محليًا على جهازك دون الحاجة للإنترنت</li>
+                        <li>البدء التلقائي عند تشغيل الجهاز</li>
+                    </ul>
+                </div>
+
+                <div class="installation-steps">
+                    <h3>خطوات التثبيت</h3>
+                    <div class="installation-step">
+                        <div class="step-text">شغّل ملف التثبيت</div>
+                        <div class="step-number">1</div>
+                    </div>
+                    <div class="installation-step">
+                        <div class="step-text">وافق على التثبيت</div>
+                        <div class="step-number">2</div>
+                    </div>
+                    <div class="installation-step">
+                        <div class="step-text">انتظر حتى يبدأ المساعد تلقائيًا</div>
+                        <div class="step-number">3</div>
+                    </div>
+                    <div class="installation-step">
+                        <div class="step-text">ارجع إلى هذه الصفحة واضغط تحقق</div>
+                        <div class="step-number">4</div>
+                    </div>
+                </div>
+
+                <div class="installation-actions">
+                    <button class="btn-download" id="downloadBtn" onclick="InstallationFlow.download()">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline; margin-left: 8px; vertical-align: middle;">
+                            <path d="M10 2v12M16 12l-6 6-6-6M2 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        تحميل مساعد YAS
+                    </button>
+                    <button class="btn-verify" id="verifyBtn" onclick="InstallationFlow.verify()" disabled>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline; margin-left: 8px; vertical-align: middle;">
+                            <path d="M8 10l2 2 4-4M10 18a8 8 0 110-16 8 8 0 010 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        تحقق من التثبيت
+                    </button>
+                </div>
+
+                <div class="installation-status" id="installStatus">
+                    <span class="installation-status-text" id="installStatusText">
+                        جاري التحقق...
+                        <span class="status-spinner"></span>
+                    </span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="client-footer">
+            <p>&copy; 2026 YAS Laptop Diagnostic System</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/hardwareAgent.js"></script>
+    <script>
+        // Installation Flow Controller
+        const InstallationFlow = {
+            verifying: false,
+            retryCount: 0,
+            maxRetries: 30,
+
+            download: function() {
+                console.log('[Installation] Download clicked');
+                const downloadUrl = '/downloads/YAS-Hardware-Agent-Setup/Install.bat';
+                window.location.href = downloadUrl;
+
+                // Enable verify button after download starts
+                setTimeout(() => {
+                    const verifyBtn = document.getElementById('verifyBtn');
+                    if (verifyBtn) verifyBtn.disabled = false;
+                }, 1000);
+            },
+
+            verify: function() {
+                if (this.verifying) return;
+                
+                console.log('[Installation] Verify clicked - starting polling');
+                this.verifying = true;
+                this.retryCount = 0;
+                this.startPolling();
+            },
+
+            startPolling: function() {
+                console.log(`[Installation] Polling attempt ${this.retryCount + 1}/${this.maxRetries}`);
+                
+                this.showStatus(true);
+                this.updateStatusDot('verifying');
+                document.getElementById('statusText').textContent = 'جاري التحقق من تشغيل المساعد...';
+
+                HardwareAgent.detectAgent()
+                    .then(connected => {
+                        if (connected) {
+                            console.log('[Installation] Agent detected!');
+                            this.onAgentConnected();
+                        } else {
+                            this.retryCount++;
+                            if (this.retryCount < this.maxRetries) {
+                                const delay = Math.min(5000, 500 + this.retryCount * 200);
+                                console.log(`[Installation] Agent not detected, retrying in ${delay}ms`);
+                                setTimeout(() => this.startPolling(), delay);
+                            } else {
+                                console.log('[Installation] Max retries reached');
+                                this.onVerifyFailed();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[Installation] Polling error:', error);
+                        this.retryCount++;
+                        if (this.retryCount < this.maxRetries) {
+                            setTimeout(() => this.startPolling(), 2000);
+                        } else {
+                            this.onVerifyFailed();
+                        }
+                    });
+            },
+
+            onAgentConnected: function() {
+                console.log('[Installation] Agent connected successfully!');
+                this.updateStatusDot('connected');
+                this.showStatus(false);
+                document.getElementById('statusText').textContent = 'مساعد YAS متصل ✓';
+
+                // Redirect to diagnostic after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'diagnostic.html';
+                }, 2000);
+            },
+
+            onVerifyFailed: function() {
+                console.log('[Installation] Verification failed');
+                this.verifying = false;
+                
+                const statusEl = document.getElementById('installStatus');
+                statusEl.classList.add('error');
+                document.getElementById('installStatusText').innerHTML = 'لم يتم اكتشاف المساعد. تأكد من تثبيته وتشغيله.';
+                
+                this.updateStatusDot('disconnected');
+                document.getElementById('statusText').textContent = 'لم يتم الاتصال بالمساعد';
+            },
+
+            showStatus: function(show) {
+                const statusEl = document.getElementById('installStatus');
+                statusEl.classList.remove('error');
+                if (show) {
+                    statusEl.style.display = 'block';
+                    document.getElementById('installStatusText').innerHTML = 'جاري التحقق...<span class="status-spinner"></span>';
+                } else {
+                    statusEl.style.display = 'none';
+                }
+            },
+
+            updateStatusDot: function(state) {
+                const dot = document.getElementById('statusDot');
+                dot.className = 'status-dot ' + state;
+            }
+        };
+
+        // Auto-check on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[Installation] Page loaded, auto-checking Agent...');
+            HardwareAgent.detectAgent()
+                .then(connected => {
+                    if (connected) {
+                        console.log('[Installation] Agent already connected on page load!');
+                        InstallationFlow.onAgentConnected();
+                    }
+                });
+        });
+    </script>
+</body>
+</html>

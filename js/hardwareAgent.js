@@ -2,22 +2,30 @@
 // BATCH 6B-2b: Hardware Agent Detection + Installation Flow
 // This module handles communication with the YAS Hardware Agent
 
-// Agent States (State Machine)
+// Agent States (State Machine) - BATCH 6B-6 Mandatory Flow
 const AgentState = {
+    INITIALIZING: 'INITIALIZING',           // جاري التهيئة
     CHECKING: 'CHECKING',                   // جاري التحقق
     CONNECTED: 'CONNECTED',                 // متصل
     DISCONNECTED: 'DISCONNECTED',           // غير متصل
+    INSTALLATION_REQUIRED: 'INSTALLATION_REQUIRED', // يحتاج تثبيت (MANDATORY)
+    INSTALLING: 'INSTALLING',               // جاري التثبيت
+    VERIFYING: 'VERIFYING',                 // جاري التحقق من التثبيت
     PERMISSION_REQUIRED: 'PERMISSION_REQUIRED', // يحتاج صلاحية
     ERROR: 'ERROR',                         // خطأ
     COLLECTING: 'COLLECTING',               // جاري قراءة المعلومات
     COMPLETED: 'COMPLETED'                  // اكتمل
 };
 
-// Agent State Messages (Arabic)
+// Agent State Messages (Arabic) - BATCH 6B-6
 const AgentStateMessages = {
+    INITIALIZING: 'جاري تهيئة فحص الجهاز...',
     CHECKING: 'جاري التحقق من مساعد فحص YAS...',
     CONNECTED: 'مساعد فحص YAS متصل',
     DISCONNECTED: 'مساعد فحص الجهاز غير متصل',
+    INSTALLATION_REQUIRED: 'مساعد فحص YAS مطلوب لتشغيل الفحص الكامل',
+    INSTALLING: 'جاري تثبيت مساعد YAS...',
+    VERIFYING: 'جاري التحقق من تشغيل المساعد...',
     PERMISSION_REQUIRED: 'يحتاج الموقع إلى السماح بالوصول إلى مساعد الفحص المحلي',
     ERROR: 'تعذر الاتصال بمساعد فحص YAS',
     COLLECTING: 'جاري قراءة معلومات الجهاز...',
