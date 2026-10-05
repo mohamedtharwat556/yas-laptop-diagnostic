@@ -31,6 +31,14 @@
                     <p class="client-description">
                         سيقوم النظام بفحص الجهاز تلقائيًا والتحقق من مجموعة من وظائف ومكونات الجهاز المتاحة من خلال المتصفح.
                     </p>
+                    
+                    <!-- Agent Status Indicator -->
+                    <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; text-align: center;">
+                        <div id="agentStatusDisplay" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span id="agentStatusDot" style="width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; animation: pulse 1.5s infinite;"></span>
+                            <span id="agentStatusText" style="font-size: 14px; color: #6b7280;">جاري التحقق من مساعد YAS...</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="client-form-container">
@@ -96,6 +104,53 @@
         // BATCH 6B-6: Mandatory Agent detection on client/index.html
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('[Client Index] Page loaded, checking Agent...');
+            
+            // Update Agent status display
+            const updateAgentStatus = (state, message) => {
+                const dot = document.getElementById('agentStatusDot');
+                const text = document.getElementById('agentStatusText');
+                
+                if (state === 'CONNECTED') {
+                    dot.style.background = '#10b981';
+                    dot.style.animation = 'none';
+                    text.textContent = '✓ مساعد YAS متصل';
+                    text.style.color = '#059669';
+                } else if (state === 'DISCONNECTED') {
+                    dot.style.background = '#ef4444';
+                    dot.style.animation = 'pulse 2s infinite';
+                    text.textContent = '✗ مساعد YAS غير متصل';
+                    text.style.color = '#dc2626';
+                } else if (state === 'CHECKING') {
+                    dot.style.background = '#f59e0b';
+                    dot.style.animation = 'pulse 1s infinite';
+                    text.textContent = 'جاري التحقق من مساعد YAS...';
+                    text.style.color = '#6b7280';
+                }
+            };
+            
+            // Add CSS animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Check Agent status
+            console.log('[Agent Status] Checking connection...');
+            const agentConnected = await HardwareAgent.detectAgent();
+            
+            if (agentConnected) {
+                console.log('[Agent Status] CONNECTED');
+                updateAgentStatus('CONNECTED', 'Agent is ready');
+                window.agentPreCheckPassed = true;
+            } else {
+                console.log('[Agent Status] DISCONNECTED');
+                updateAgentStatus('DISCONNECTED', 'Agent not found');
+                window.agentPreCheckPassed = false;
+            }
             
             const form = document.getElementById('clientForm');
             if (!form) return;
