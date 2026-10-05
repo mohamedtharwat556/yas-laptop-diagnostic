@@ -45,8 +45,17 @@ const HARDWARE_AGENT_CONFIG = {
         if (stored) {
             return stored;
         }
-        // Default to localhost
-        return 'http://127.0.0.1:5275';
+        
+        // Determine correct URL based on current page protocol
+        // If we're on HTTPS (Vercel production), use HTTPS proxy
+        // If we're on HTTP (localhost dev), use HTTP agent directly
+        if (window.location.protocol === 'https:') {
+            // Production: Use HTTPS proxy on localhost:443
+            return 'https://127.0.0.1:443';
+        } else {
+            // Development: Use HTTP agent directly on localhost:5275
+            return 'http://127.0.0.1:5275';
+        }
     },
     
     timeout: 3000, // 3 seconds timeout (2 second grace period before decision)
