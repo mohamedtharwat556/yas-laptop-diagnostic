@@ -46,9 +46,9 @@ const HARDWARE_AGENT_CONFIG = {
             return stored;
         }
         
-        // Always use HTTP agent directly on localhost:5275
-        // Works from both HTTP localhost and HTTPS Vercel (via proxy)
-        return 'http://127.0.0.1:5275';
+        // Always use HTTP proxy on localhost:8888
+        // Avoids CORS issues from localhost dev
+        return 'http://127.0.0.1:8888';
     },
     
     timeout: 3000, // 3 seconds timeout (2 second grace period before decision)
