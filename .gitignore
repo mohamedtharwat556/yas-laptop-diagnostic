@@ -8,6 +8,8 @@ js/supabaseConfig.local.js
 
 # Node modules (if added later)
 node_modules/
+proxy/node_modules/
+proxy/certs/
 
 # Build outputs
 dist/
